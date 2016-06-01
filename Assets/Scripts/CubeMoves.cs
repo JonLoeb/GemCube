@@ -11,7 +11,7 @@ public class CubeMoves : MonoBehaviour {
   bool originRotate = false;
   bool useAngleMethod = true;
   bool firstRun = true;
-  IGem[] gem = new IGem[gemCount];
+  IGem[] gem = new IGem[6];
 
   Quaternion[] currentState = new Quaternion[gemCount];
   Quaternion[] stabilizers = new Quaternion[gemCount];
@@ -46,6 +46,152 @@ public class CubeMoves : MonoBehaviour {
   bool[] needsUpdate = new bool[6];
   string moves = "";
   string sideOrder = "ULFRBD";
+
+  private static readonly float[,] angleTable = {
+    {0.9f, 1.9f, -0.7f, -2.8f, -1.5f, -4.5f},
+    {-7.9f, -12.6f, 5.3f, 5.1f, -4.4f, -8.3f},
+    {3.6f, 5.3f, 3.2f, -1.4f, -6.8f, -6.6f},
+    {14.6f, -7.1f, 5.4f, -8.3f, -7.2f, -10.0f},
+    {3.1f, -18.2f, 13.6f, -3.8f, -3.2f, -3.3f},
+    {0.9f, -0.2f, 0.2f, 0.1f, -0.1f, -2.3f},
+    {0.8f, -2.0f, -0.2f, -0.8f, -3.1f, -2.9f},
+    {0.8f, -2.0f, -0.2f, -0.8f, -3.1f, -2.9f},
+    {3.6f, -2.8f, 6.6f, 8.1f, -4.2f, -3.4f},
+    {1.2f, 9.6f, 14.7f, -9.2f, -5.2f, 6.4f},
+    {10.6f, -4.7f, 6.1f, -4.4f, -5.8f, -9.2f},
+    {-1.0f, -3.7f, 3.3f, -3.7f, 1.9f, -8.2f},
+    {10.0f, 7.4f, 7.7f, 3.6f, -7.3f, -5.8f},
+    {9.1f, 2.5f, 6.1f, -8.0f, -2.5f, 1.9f},
+    {-0.8f, 4.4f, 1.2f, -4.0f, -1.0f, -2.5f},
+    {9.4f, 7.5f, 1.5f, -4.7f, -7.3f, -6.9f},
+    {-7.6f, 10.3f, 5.7f, -4.6f, 0.3f, -9.0f},
+    {-0.9f, 0.1f, 5.1f, 2.6f, 0.3f, -1.4f},
+    {-6.3f, -5.5f, 4.1f, -3.1f, -1.8f, -5.3f},
+    {-1.4f, 20.1f, 8.8f, 5.2f, -6.5f, 3.8f},
+    {-2.9f, 30.2f, 10.3f, 6.2f, -4.5f, 5.1f},
+    {-2.5f, 26.8f, 8.4f, 2.9f, -1.9f, 4.4f},
+    {0.5f, 16.1f, 4.7f, -1.6f, 1.1f, -3.7f},
+    {6.3f, 2.8f, 0.6f, -4.2f, 4.9f, -5.3f},
+    {9.0f, -1.5f, -1.1f, -3.9f, 6.4f, -6.9f},
+    {12.1f, -4.7f, -2.1f, -2.8f, 7.7f, -9.5f},
+    {-0.4f, -0.2f, 0.2f, -2.3f, -0.3f, 0.5f},
+    {-1.7f, 4.1f, 7.3f, -4.3f, 0.6f, 2.4f},
+    {-2.6f, 7.4f, 9.5f, -3.0f, 1.0f, 3.7f},
+    {-4.6f, 8.2f, 10.8f, -2.9f, 0.7f, 5.1f},
+    {-6.2f, 8.2f, 11.3f, -3.0f, 0.3f, 5.8f},
+    {-0.8f, 2.5f, 1.0f, 0.3f, 1.8f, 0.1f},
+    {-1.6f, 3.0f, 1.4f, 0.0f, 2.0f, 0.3f},
+    {-1.6f, 3.0f, 1.4f, 0.1f, 1.9f, 0.3f},
+    {-1.3f, 2.7f, 1.5f, -0.6f, 2.3f, -0.7f},
+    {0.2f, 2.3f, 1.3f, -1.0f, 1.3f, -2.4f},
+    {3.0f, -3.8f, 1.2f, -1.4f, 0.4f, -5.3f},
+    {1.0f, 2.4f, 0.7f, -1.5f, -1.1f, -1.3f},
+    {2.9f, 3.8f, 2.1f, -1.7f, -2.8f, -3.9f},
+    {2.0f, 6.1f, 2.7f, -2.5f, -2.3f, -4.0f},
+    {3.4f, 5.2f, 1.8f, -1.4f, -3.3f, -4.4f},
+    {14.1f, -6.7f, 7.6f, -8.3f, -6.8f, -9.9f},
+    {15.4f, -11.6f, 8.2f, -9.0f, -6.6f, -9.8f},
+    {13.8f, -7.7f, 9.5f, 6.3f, -6.0f, -7.9f},
+    {11.7f, 6.7f, 9.6f, 4.1f, -5.8f, -6.9f},
+    {9.6f, 6.4f, 9.4f, 2.8f, -5.8f, -6.1f},
+    {8.8f, 5.4f, 6.6f, -4.4f, -7.0f, -8.3f},
+    {-2.4f, 1.0f, 3.0f, -2.9f, 1.0f, 0.5f},
+    {-1.8f, -4.8f, 3.7f, 3.0f, -2.0f, -2.3f},
+    {1.2f, -7.4f, 4.5f, -3.1f, -3.8f, -3.9f},
+    {6.1f, 9.1f, 5.3f, -4.2f, -2.0f, -6.5f},
+    {2.1f, -3.0f, 1.1f, -2.5f, -2.1f, -5.5f},
+    {4.6f, 6.0f, 2.1f, -2.9f, 1.5f, -9.7f},
+    {3.7f, 6.6f, 2.8f, 6.2f, 2.0f, -12.9f},
+    {2.4f, -7.5f, 3.3f, 9.2f, 3.2f, -14.5f},
+    {3.6f, -8.8f, 4.1f, 11.8f, 4.8f, -15.4f},
+    {3.2f, -5.6f, 2.8f, 3.0f, -6.2f, -8.2f},
+    {-1.6f, -3.9f, -2.3f, 1.7f, -4.2f, -4.8f},
+    {1.8f, -1.8f, 3.2f, 2.8f, -2.5f, -1.9f},
+    {2.9f, -2.5f, 5.5f, -7.1f, -2.2f, 1.6f},
+    {8.1f, -3.6f, 5.7f, -8.5f, -3.3f, 3.1f},
+    {13.0f, -4.2f, 6.2f, -8.6f, -4.1f, 4.1f},
+    {-17.1f, -5.4f, 7.2f, -8.1f, -4.6f, 4.6f},
+    {-1.4f, -10.6f, 7.8f, -3.6f, 1.7f, -11.0f},
+    {2.4f, -3.1f, -1.9f, 0.5f, -2.8f, -5.1f},
+    {3.4f, -4.8f, -2.7f, 1.6f, -4.7f, -7.8f},
+    {4.1f, 8.6f, -2.8f, 2.3f, -4.4f, -7.3f},
+    {7.6f, 6.9f, 8.9f, 4.6f, -4.6f, -5.0f},
+    {9.5f, 9.5f, 8.5f, -4.9f, -5.4f, -5.4f},
+    {10.4f, 8.2f, 7.1f, -2.8f, -5.3f, -5.9f}
+  };
+
+  private static readonly Quaternion[] quaternionTable = {
+    new Quaternion(0.064f, -0.063f, -0.693f, 0.715f),
+    new Quaternion(0.501f, 0.474f, -0.459f, 0.560f),
+    new Quaternion(-0.711f, 0.002f, 0.002f, 0.704f),
+    new Quaternion(-0.508f, -0.511f, 0.527f, 0.451f),
+    new Quaternion(0.484f, -0.016f, -0.466f, 0.741f),
+    new Quaternion(0.000f, 0.005f, 0.000f, 1.000f),
+    new Quaternion(0.318f, -0.081f, 0.295f, 0.897f),
+    new Quaternion(0.318f, -0.081f, 0.295f, 0.897f),
+    new Quaternion(0.785f, -0.204f, -0.306f, 0.498f),
+    new Quaternion(0.294f, -0.793f, -0.398f, 0.354f),
+    new Quaternion(-0.768f, -0.184f, 0.362f, 0.495f),
+    new Quaternion(0.116f, -0.615f, 0.440f, 0.644f),
+    new Quaternion(0.993f, -0.005f, 0.002f, 0.122f),
+    new Quaternion(0.169f, 0.794f, 0.452f, 0.370f),
+    new Quaternion(-0.264f, -0.044f, -0.335f, 0.903f),
+    new Quaternion(-0.834f, 0.008f, -0.340f, 0.434f),
+    new Quaternion(0.471f, -0.536f, 0.538f, 0.449f),
+    new Quaternion(-0.010f, 0.462f, 0.002f, 0.887f),
+    new Quaternion(-0.011f, 0.971f, 0.001f, 0.239f),
+    new Quaternion(0.012f, 0.278f, 0.057f, 0.959f),
+    new Quaternion(0.010f, 0.480f, 0.038f, 0.877f),
+    new Quaternion(-0.006f, 0.642f, 0.016f, 0.766f),
+    new Quaternion(-0.030f, 0.778f, 0.002f, 0.628f),
+    new Quaternion(-0.064f, 0.897f, 0.002f, 0.438f),
+    new Quaternion(-0.078f, 0.932f, 0.006f, 0.355f),
+    new Quaternion(-0.092f, 0.966f, 0.017f, 0.239f),
+    new Quaternion(0.009f, -0.198f, 0.002f, 0.980f),
+    new Quaternion(0.021f, -0.675f, 0.026f, 0.737f),
+    new Quaternion(0.017f, -0.789f, 0.032f, 0.613f),
+    new Quaternion(0.012f, -0.880f, 0.039f, 0.473f),
+    new Quaternion(0.008f, -0.932f, 0.043f, 0.360f),
+    new Quaternion(0.005f, -0.031f, -0.112f, 0.993f),
+    new Quaternion(0.016f, -0.053f, -0.202f, 0.978f),
+    new Quaternion(0.016f, -0.053f, -0.201f, 0.978f),
+    new Quaternion(0.056f, -0.103f, -0.393f, 0.912f),
+    new Quaternion(0.086f, -0.113f, -0.534f, 0.834f),
+    new Quaternion(0.104f, -0.096f, -0.694f, 0.706f),
+    new Quaternion(-0.233f, -0.051f, -0.012f, 0.971f),
+    new Quaternion(-0.465f, -0.032f, -0.016f, 0.885f),
+    new Quaternion(-0.489f, 0.091f, -0.253f, 0.829f),
+    new Quaternion(-0.536f, -0.008f, -0.005f, 0.844f),
+    new Quaternion(-0.521f, -0.526f, 0.511f, 0.437f),
+    new Quaternion(-0.708f, -0.347f, 0.440f, 0.430f),
+    new Quaternion(-0.820f, -0.231f, 0.369f, 0.372f),
+    new Quaternion(-0.875f, -0.150f, 0.319f, 0.332f),
+    new Quaternion(-0.906f, -0.093f, 0.268f, 0.313f),
+    new Quaternion(-0.704f, -0.156f, 0.050f, 0.691f),
+    new Quaternion(0.315f, -0.225f, -0.252f, 0.887f),
+    new Quaternion(0.587f, -0.074f, -0.091f, 0.801f),
+    new Quaternion(0.694f, -0.068f, 0.075f, 0.713f),
+    new Quaternion(0.619f, -0.345f, 0.347f, 0.614f),
+    new Quaternion(0.365f, -0.226f, 0.428f, 0.795f),
+    new Quaternion(0.262f, -0.475f, 0.561f, 0.626f),
+    new Quaternion(0.178f, -0.573f, 0.639f, 0.481f),
+    new Quaternion(0.081f, -0.643f, 0.671f, 0.360f),
+    new Quaternion(-0.034f, -0.701f, 0.673f, 0.234f),
+    new Quaternion(-0.419f, -0.110f, 0.412f, 0.802f),
+    new Quaternion(-0.252f, 0.094f, 0.522f, 0.809f),
+    new Quaternion(-0.104f, 0.308f, 0.558f, 0.764f),
+    new Quaternion(0.125f, 0.597f, 0.550f, 0.571f),
+    new Quaternion(0.243f, 0.710f, 0.506f, 0.425f),
+    new Quaternion(0.331f, 0.777f, 0.451f, 0.289f),
+    new Quaternion(0.409f, 0.819f, 0.378f, 0.141f),
+    new Quaternion(0.042f, 0.652f, -0.410f, 0.637f),
+    new Quaternion(-0.058f, -0.130f, 0.468f, 0.872f),
+    new Quaternion(-0.081f, -0.103f, 0.719f, 0.683f),
+    new Quaternion(-0.251f, 0.014f, 0.682f, 0.687f),
+    new Quaternion(-0.610f, 0.386f, 0.384f, 0.576f),
+    new Quaternion(-0.692f, 0.499f, 0.169f, 0.493f),
+    new Quaternion(-0.700f, 0.600f, -0.081f, 0.379f)
+  };
 
   void Start () {
     GemManager.Instance.Connect();
@@ -195,13 +341,13 @@ public class CubeMoves : MonoBehaviour {
           getLayer(i);
           float angle = angleCounter[i] + spinFixer[i];
           //float range = 6 + (20 * (Quaternion.Angle(Quaternion.identity, cubeRotation)/180));
-          if(ignoreUpdate(angleCounter[i], 26)){
+          if(ignoreUpdate(angleCounter[i], 19)){
             angle = (angle + 360) % 360;
             angle = Mathf.Round(angle/90)*90;
             angle = (angle + 360) % 360;
           }
           foreach (Piece c in animateUs) {
-            //c.transform.rotation = Quaternion.AngleAxis(angle, cubeRotation * axis[i]) * c.transform.rotation;
+            c.transform.rotation = Quaternion.AngleAxis(angle, cubeRotation * axis[i]) * c.transform.rotation;
             //c.transform.RotateAround(Vector3.zero, cubeRotation * axis[i], angle);
           }
         }
@@ -210,7 +356,7 @@ public class CubeMoves : MonoBehaviour {
         }
       }
       for(int i = 0; i < gemCount; i++){
-        //doSpin(i);
+        doSpin(i);
       }
       //cubeParent.transform.rotation = cubeRotation;
     }
@@ -436,9 +582,7 @@ public class CubeMoves : MonoBehaviour {
 
     if(gemIsConnected[i]){
       Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
-
       angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
-
       angleCounter[i] *= angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
       //angleCounter[i] *= angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
 
@@ -449,6 +593,10 @@ public class CubeMoves : MonoBehaviour {
           //calibrateFixer[i] = angleCounter[i] - Mathf.Round( angleCounter[i]/45  )*45;
       }
       //angleCounter[i] =  angleCounter[i] - calibrateFixer[i];
+      angleCounter[i] = (angleCounter[i] + 360) % 360;
+
+      //turn this off when getting bug data
+      angleCounter[i] -= bugFixAngle(i);
       angleCounter[i] = (angleCounter[i] + 360) % 360;
 
       if(angleIsTooBig(angle, angleCounter[i])){
@@ -483,6 +631,21 @@ public class CubeMoves : MonoBehaviour {
     }
     //stateText[0].text = moves;
     return false;
+  }
+
+  float bugFixAngle(int gemIndex){
+    float closestDistance = Quaternion.Angle(cubeRotation, Quaternion.identity);
+    float bugFix = 0;
+
+    for (int i = 0; i < quaternionTable.Length; i++){
+      float distance = Quaternion.Angle(cubeRotation, quaternionTable[i]);
+      if (distance < closestDistance){
+        closestDistance = distance;
+        bugFix = angleTable[i, gemIndex];
+      }
+    }
+
+    return bugFix;
   }
 
   void getLayer(int layerIndex) {
