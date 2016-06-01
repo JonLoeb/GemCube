@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2008
+
+Project("{5E39715F-CF6C-C2F1-098A-DD842286B38D}") = "Gem Cube 1 copy", "Assembly-CSharp.csproj", "{5630FE6E-9952-D818-178A-73319D8E97D8}"
+EndProject
+Project("{5E39715F-CF6C-C2F1-098A-DD842286B38D}") = "Gem Cube 1 copy", "Assembly-CSharp-Editor.csproj", "{455F8985-3F2B-C8B7-3FEE-5D5129DE9A15}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5630FE6E-9952-D818-178A-73319D8E97D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5630FE6E-9952-D818-178A-73319D8E97D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5630FE6E-9952-D818-178A-73319D8E97D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5630FE6E-9952-D818-178A-73319D8E97D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{455F8985-3F2B-C8B7-3FEE-5D5129DE9A15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{455F8985-3F2B-C8B7-3FEE-5D5129DE9A15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{455F8985-3F2B-C8B7-3FEE-5D5129DE9A15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{455F8985-3F2B-C8B7-3FEE-5D5129DE9A15}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
+	EndGlobalSection
+EndGlobal

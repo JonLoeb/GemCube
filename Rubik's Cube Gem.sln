@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2008
+
+Project("{6F602E14-4946-44CE-AE4F-FB28E04DD63E}") = "Rubik's Cube Gem", "Assembly-CSharp.csproj", "{44CC40AC-A537-0CE9-EEF2-68F7BFA266CA}"
+EndProject
+Project("{6F602E14-4946-44CE-AE4F-FB28E04DD63E}") = "Rubik's Cube Gem", "Assembly-CSharp-Editor.csproj", "{72AA9ED7-F6CE-72BA-2CA9-8C6FF493D4F4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{44CC40AC-A537-0CE9-EEF2-68F7BFA266CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44CC40AC-A537-0CE9-EEF2-68F7BFA266CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44CC40AC-A537-0CE9-EEF2-68F7BFA266CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44CC40AC-A537-0CE9-EEF2-68F7BFA266CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72AA9ED7-F6CE-72BA-2CA9-8C6FF493D4F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72AA9ED7-F6CE-72BA-2CA9-8C6FF493D4F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72AA9ED7-F6CE-72BA-2CA9-8C6FF493D4F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72AA9ED7-F6CE-72BA-2CA9-8C6FF493D4F4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
+	EndGlobalSection
+EndGlobal

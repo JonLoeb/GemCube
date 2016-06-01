@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2008
+
+Project("{783FEEDD-07F7-1FB3-1ABB-5D0C54B1B231}") = "Cube Decomp", "Assembly-CSharp.csproj", "{95FBC839-1A3F-B9DA-0B46-296756B429C8}"
+EndProject
+Project("{783FEEDD-07F7-1FB3-1ABB-5D0C54B1B231}") = "Cube Decomp", "Assembly-CSharp-Editor.csproj", "{8CB0E8CF-B9A0-34A9-92C1-8D6EE738F725}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{95FBC839-1A3F-B9DA-0B46-296756B429C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95FBC839-1A3F-B9DA-0B46-296756B429C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95FBC839-1A3F-B9DA-0B46-296756B429C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95FBC839-1A3F-B9DA-0B46-296756B429C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CB0E8CF-B9A0-34A9-92C1-8D6EE738F725}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CB0E8CF-B9A0-34A9-92C1-8D6EE738F725}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CB0E8CF-B9A0-34A9-92C1-8D6EE738F725}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CB0E8CF-B9A0-34A9-92C1-8D6EE738F725}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
+	EndGlobalSection
+EndGlobal

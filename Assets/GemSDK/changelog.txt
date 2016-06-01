@@ -1,0 +1,30 @@
+GemSDK Unity Plugin 
+
+v1.0.3 (27.03.2016)
+
+- Fix bug with GemManager.Istance.GetGem(int pos). Returned multiple instances of a Gem with pos=0.
+- [Windows] Fix bug with getting paired Gems addresses. Only first addess was correct    
+- AzimuthElevationConverter.Convert(...) and TiltElevationConverter.Convert(...)  now return angles in degrees.
+- Rename QuaternionDemo scene to RotationDemo.
+- Add TwoGemsDemo scene.
+- Add AllDataDemo scene.
+
+  Known issues:
+    - [Windows] If app is closing  when Gem is in "Connecting" state it takes up to 8 sec to exit
+
+v1.0.2 (20.03.2016)
+
+- Add changelog file
+- Add IGem.CalibrateOrigin() function to be used instead of IGem.Calibrate(). IGem.Calibrate() now is deprecated!
+- Add IGem.CalibrateAzimuth() function. Comparing to CalibrateOrigin() doesn't affect tilt and elevation (pitch and roll) angles.
+- Add GemManager.Istance.GetGem(int pos). Gets gem instance regarding to its position in paired devices list ("Gem SDK Utility" app for Android).
+- Remove IGem.Reconnect().
+- Update GemSDK Windows:
+	- Pedometer and tap features are available
+	- Connection to a Gem now is asynchronous
+	- IGem.State variable handles unexpected disconnections
+	- SDK keeps trying to connect until connection will be established and reconnects automatically after disconnections
+- Update GemSDK Android
+
+  Known issues:
+    - [Windows] If app is closing  when Gem is in "Connecting" state it takes up to 8 sec to exit

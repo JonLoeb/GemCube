@@ -1,0 +1,23 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2008
+
+Project("{DC1A3AC5-E14C-E48C-E39C-FB41495265D0}") = "Rubik's Cube", "Assembly-CSharp.csproj", "{EA58299D-3300-DA67-0925-A5DDBFB2A704}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA58299D-3300-DA67-0925-A5DDBFB2A704}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA58299D-3300-DA67-0925-A5DDBFB2A704}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA58299D-3300-DA67-0925-A5DDBFB2A704}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA58299D-3300-DA67-0925-A5DDBFB2A704}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Assembly-CSharp.csproj
+	EndGlobalSection
+EndGlobal
