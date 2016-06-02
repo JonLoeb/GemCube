@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/JonWorld.unity
+- path: Assets/GemSDK/Scenes/RotationDemo.unity
   isLoaded: 1
   isActive: 1
