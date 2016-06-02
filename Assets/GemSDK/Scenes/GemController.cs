@@ -14,7 +14,6 @@ public class GemController : MonoBehaviour{
   public Text tableDataText;
   string quatData = "";
   string angleData = "";
-  private bool isKeyPressed = false;
 
   Vector3[] axis = new Vector3[6];
   Vector3[] axisNorm = new Vector3[6];
@@ -115,15 +114,14 @@ public class GemController : MonoBehaviour{
 
   void FixedUpdate(){
 
-
+    if(Input.GetKeyUp(KeyCode.Space)){
+      tableDataText.text = tableText();
+      System.IO.File.WriteAllText("../../Desktop/quatData.text", quatData);
+      System.IO.File.WriteAllText("../../Desktop/angleData.text", angleData);
+    }
 
     if (gemsAreNotNull()){
-      if(Input.GetKeyUp(KeyCode.Space)){
-        isKeyPressed = false;
-        tableDataText.text = tableText();
-        System.IO.File.WriteAllText("../quatData.text", quatData);
-        System.IO.File.WriteAllText("../angleData.text", angleData);
-      }
+
 
       if (Input.GetMouseButton(0)){
 
@@ -219,10 +217,17 @@ public class GemController : MonoBehaviour{
 
   string tableText(){
     string outputMe = cubeRotation.ToString("#.00") + "\n{";
-    quatData += "\n new Quaternion" + cubeRotation.ToString("#0.000") + ",";
+    quatData += "\n new Quaternion("
+      + cubeRotation[0].ToString("#0.000") + "f, "
+      + cubeRotation[1].ToString("#0.000") + "f, "
+      + cubeRotation[2].ToString("#0.000") + "f, "
+      + cubeRotation[3].ToString("#0.000") + "f),";
     angleData += "\n {";
     for (int i = 0; i < gemCount; i++){
-      angleData += getAngleError(angle[i], 0).ToString("#0.0") + "f, ";
+      if(i != 0){
+        angleData += ", ";
+      }
+      angleData += getAngleError(angle[i], 0).ToString("#0.0") + "f";
       outputMe += getAngleError(angle[i], 0).ToString("#.0") + ", ";
     }
     angleData += "},";
