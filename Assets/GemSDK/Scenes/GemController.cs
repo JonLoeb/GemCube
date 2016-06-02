@@ -222,6 +222,7 @@ public class GemController : MonoBehaviour{
       + cubeRotation[1].ToString("#0.000") + "f, "
       + cubeRotation[2].ToString("#0.000") + "f, "
       + cubeRotation[3].ToString("#0.000") + "f),";
+      
     angleData += "\n {";
     for (int i = 0; i < gemCount; i++){
       if(i != 0){
