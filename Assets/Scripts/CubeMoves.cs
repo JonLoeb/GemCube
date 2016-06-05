@@ -7,7 +7,7 @@ using UnityEngine.UI;
 //orgin
 public class CubeMoves : MonoBehaviour {
 
-  const int gemCount = 2;
+  const int gemCount = 6;
   bool originRotate = false;
   bool useAngleMethod = true;
   bool firstRun = true;
@@ -25,6 +25,7 @@ public class CubeMoves : MonoBehaviour {
   Vector3[] axis = new Vector3[6];
   Vector3[] axisNorm = new Vector3[6];
   Quaternion[] sideOrientation = new Quaternion[6];
+
 
   Quaternion[] cornerPermutation = new Quaternion[8];
   Quaternion[] edgePermutation  = new Quaternion[12];
@@ -45,6 +46,8 @@ public class CubeMoves : MonoBehaviour {
   bool[] needsUpdate = new bool[6];
   string moves = "";
   string sideOrder = "ULFRBD";
+
+
 
   private static readonly float[,] angleTable = {
     {0.9f, 1.9f, -0.7f, -2.8f, -1.5f, -4.5f},
@@ -272,13 +275,25 @@ public class CubeMoves : MonoBehaviour {
     // }
     gem[0] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:DD");
     gem[1] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:E6");
-    //gem[2] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:3A");
-    //gem[3] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:69");
-    //gem[4] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:4D");
-    //gem[5] =  GemManager.Instance.GetGem("D0:B5:C2:90:7E:2F");
+    gem[2] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:3A");
+    gem[3] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:69");
+    gem[4] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:4D");
+    gem[5] =  GemManager.Instance.GetGem("D0:B5:C2:90:7E:2F");
 
 
+    axisNorm[0] = Vector3.left;//U
+    axisNorm[1] = Vector3.back;//L
+    axisNorm[2] = Vector3.right;//F
+    axisNorm[3] = Vector3.forward;//R
+    axisNorm[4] = Vector3.left;//B
+    axisNorm[5] = Vector3.back;//D
 
+    sideOrientation[0] = Quaternion.identity;
+    sideOrientation[1] = Quaternion.AngleAxis(90, axisNorm[1]);
+    sideOrientation[2] = Quaternion.AngleAxis(90, axisNorm[2]);
+    sideOrientation[3] = Quaternion.AngleAxis(90, axisNorm[3]);
+    sideOrientation[4] = Quaternion.AngleAxis(90, axisNorm[4]);
+    sideOrientation[5] = Quaternion.AngleAxis(180, axisNorm[5]);
 
     GameObject[] corner = GameObject.FindGameObjectsWithTag("corner").OrderBy(c => int.Parse(c.name)).ToArray();
     for (int i = 0; i < corner.Length; i++){
@@ -296,6 +311,26 @@ public class CubeMoves : MonoBehaviour {
   }
 
   void FixedUpdate () {
+    if (Input.GetKeyDown("1")) {
+      fixSuperCube(0);
+    }
+    if (Input.GetKeyDown("2")) {
+      fixSuperCube(1);
+    }
+    if (Input.GetKeyDown("3")) {
+      fixSuperCube(2);
+    }
+    if (Input.GetKeyDown("4")) {
+      fixSuperCube(3);
+    }
+    if (Input.GetKeyDown("5")) {
+      fixSuperCube(4);
+    }
+    if (Input.GetKeyDown("6")) {
+      fixSuperCube(5);
+    }
+
+
     if (Input.GetMouseButton(0)){
       resetAll();
     }
@@ -325,19 +360,19 @@ public class CubeMoves : MonoBehaviour {
     axis[4] = Vector3.forward;//B
     axis[5] = Vector3.down;//D
 
-    axisNorm[0] = Vector3.left;//U
-    axisNorm[1] = Vector3.back;//L
-    axisNorm[2] = Vector3.right;//F
-    axisNorm[3] = Vector3.forward;//R
-    axisNorm[4] = Vector3.left;//B
-    axisNorm[5] = Vector3.back;//D
-
-    sideOrientation[0] = Quaternion.identity;
-    sideOrientation[1] = Quaternion.AngleAxis(90, axisNorm[1]);
-    sideOrientation[2] = Quaternion.AngleAxis(90, axisNorm[2]);
-    sideOrientation[3] = Quaternion.AngleAxis(90, axisNorm[3]);
-    sideOrientation[4] = Quaternion.AngleAxis(90, axisNorm[4]);
-    sideOrientation[5] = Quaternion.AngleAxis(180, axisNorm[5]);
+    // axisNorm[0] = Vector3.left;//U
+    // axisNorm[1] = Vector3.back;//L
+    // axisNorm[2] = Vector3.right;//F
+    // axisNorm[3] = Vector3.forward;//R
+    // axisNorm[4] = Vector3.left;//B
+    // axisNorm[5] = Vector3.back;//D
+    //
+    // sideOrientation[0] = Quaternion.identity;
+    // sideOrientation[1] = Quaternion.AngleAxis(90, axisNorm[1]);
+    // sideOrientation[2] = Quaternion.AngleAxis(90, axisNorm[2]);
+    // sideOrientation[3] = Quaternion.AngleAxis(90, axisNorm[3]);
+    // sideOrientation[4] = Quaternion.AngleAxis(90, axisNorm[4]);
+    // sideOrientation[5] = Quaternion.AngleAxis(180, axisNorm[5]);
 
     setUpCenters();
     setUpCorners();
@@ -444,6 +479,12 @@ public class CubeMoves : MonoBehaviour {
              currentState[i] * Vector3.up));
 
     //return Quaternion.identity;
+  }
+
+  void fixSuperCube(int i){
+    sideOrientation[i] = sideOrientation[i] * Quaternion.AngleAxis(90, axis[i]);
+    centerPermutation[i] = centerPermutation[i] * Quaternion.AngleAxis(90, axis[i]);
+
   }
 
   void resticker(){
