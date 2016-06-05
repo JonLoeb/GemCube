@@ -7,7 +7,7 @@ using UnityEngine.UI;
 //orgin
 public class CubeMoves : MonoBehaviour {
 
-  const int gemCount = 6;
+  const int gemCount = 2;
   bool originRotate = false;
   bool useAngleMethod = true;
   bool firstRun = true;
@@ -272,10 +272,10 @@ public class CubeMoves : MonoBehaviour {
     // }
     gem[0] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:DD");
     gem[1] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:E6");
-    gem[2] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:3A");
-    gem[3] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:69");
-    gem[4] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:4D");
-    gem[5] =  GemManager.Instance.GetGem("D0:B5:C2:90:7E:2F");
+    //gem[2] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:3A");
+    //gem[3] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:69");
+    //gem[4] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:4D");
+    //gem[5] =  GemManager.Instance.GetGem("D0:B5:C2:90:7E:2F");
 
 
 
@@ -356,7 +356,7 @@ public class CubeMoves : MonoBehaviour {
         currentState[i] =  Quaternion.Inverse(sideOrientation[i]) * gem[i].Rotation * sideOrientation[i];
       }
       else{
-        gem[i].CalibrateAzimuth();
+        //gem[i].CalibrateAzimuth();
         currentState[i] = gem[i].Rotation * sideOrientation[i];
       }
       stabilizers[i] = stabilizer(i);
@@ -696,11 +696,11 @@ public class CubeMoves : MonoBehaviour {
 
     if(gemIsConnected[i]){
       Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
-      angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
-      angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
+      //angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
+      //angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
 
-      //angleCounter[i] = Quaternion.Angle(cubeRotation, currentState[i]);
-      //angleCounter[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
+      angleCounter[i] = Quaternion.Angle(cubeRotation, currentState[i]);
+      angleCounter[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
 
       angleCounter[i] = (angleCounter[i] + 360) % 360;
 
@@ -712,7 +712,7 @@ public class CubeMoves : MonoBehaviour {
         angleCounter[i] = 360 - angleCounter[i];
         angleCounter[i] = (angleCounter[i] + 360) % 360;
       }
-      
+
       else if(angleIsTooBig(angle, angleCounter[i])){
         angleCounter[i] = angle;
       }

@@ -6,6 +6,9 @@ using UnityEngine.UI;
 
 public class GemController : MonoBehaviour{
 
+  bool firstAngleMethod = true;
+  bool normalize = true;
+
   const int gemCount = 6;
   IGem[] gem = new IGem[6];
   float[] angle = new float[gemCount];
@@ -21,10 +24,7 @@ public class GemController : MonoBehaviour{
   Quaternion[] currentState = new Quaternion[gemCount];
   Quaternion[] stabalizer = new Quaternion[gemCount];
   Quaternion cubeRotation = Quaternion.identity;
-  Quaternion safeRotation = Quaternion.identity;
-  //Quaternion prevCubeRotation = Quaternion.identity;
   Quaternion[] rotationData = new Quaternion[12];
-  bool firstAngleMethod = true;
 
   public GameObject ball;
 
@@ -318,6 +318,8 @@ public class GemController : MonoBehaviour{
     axisNorm[3] = Vector3.forward;//R
     axisNorm[4] = Vector3.left;//B
     axisNorm[5] = Vector3.back;//D
+      //axisNorm[5] = Vector3.right;//D
+
 
     sideOrientation[0] = Quaternion.identity;
     sideOrientation[1] = Quaternion.AngleAxis(90, axisNorm[1]);
@@ -347,10 +349,10 @@ public class GemController : MonoBehaviour{
       if (Input.GetMouseButton(0)){
         //calibrate gems
         for (int i = 0; i < gemCount; i++){
-          gem[i].CalibrateAzimuth();
+        //  gem[i].CalibrateAzimuth();
         }
         //Use instead of CalibrateAzimuth() to calibrate also tilt and elevation
-        //gem.ColibrateOrigin();
+        //gem.CalibrateOrigin();
 
         cubeRotation = Quaternion.identity;
         calculateStabalizers();
@@ -359,9 +361,9 @@ public class GemController : MonoBehaviour{
       for (int i = 0; i < gemCount; i++){
         currentState[i] = gem[i].Rotation * sideOrientation[i];
       }
-      //stabalizeGems();
+      stabalizeGems();
       getCubeRotation();
-      //matchStateToCube();
+      matchStateToCube();
 
       transform.rotation = cubeRotation;
 
@@ -424,6 +426,9 @@ public class GemController : MonoBehaviour{
       gem[i].Rotation * sideOrientation[i] * Vector3.forward,
       gem[i].Rotation * sideOrientation[i] * Vector3.up));
     }
+
+
+
   }
 
   void stabalizeGems(){
@@ -608,11 +613,14 @@ public class GemController : MonoBehaviour{
 
         //Normalize. Note: experiment to see whether you
         //can skip this step.
-        float lengthD = 1.0f / (w*w + x*x + y*y + z*z);
-        w *= lengthD;
-        x *= lengthD;
-        y *= lengthD;
-        z *= lengthD;
+        if (normalize){
+          float lengthD = 1.0f / (w*w + x*x + y*y + z*z);
+          w *= lengthD;
+          x *= lengthD;
+          y *= lengthD;
+          z *= lengthD;
+        }
+
 
         //The result is valid right away, without
         //first going through the entire array.
@@ -626,6 +634,8 @@ public class GemController : MonoBehaviour{
         //https://gist.github.com/jankolkmeier/8543156
       }
     }
+
+    //cubeRotation = rotationData[1];
   }
 
   //Changes the sign of the quaternion components. This is not the same as the inverse.
