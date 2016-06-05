@@ -21,12 +21,12 @@ public class GemController : MonoBehaviour{
   Quaternion[] currentState = new Quaternion[gemCount];
   Quaternion[] stabalizer = new Quaternion[gemCount];
   Quaternion cubeRotation = Quaternion.identity;
-  bool safeMode = false;
   Quaternion safeRotation = Quaternion.identity;
   //Quaternion prevCubeRotation = Quaternion.identity;
   Quaternion[] rotationData = new Quaternion[12];
+  bool firstAngleMethod = true;
 
-   public GameObject ball;
+  public GameObject ball;
 
   private static readonly float[,] angleTable = {
     {0.9f, 1.9f, -0.7f, -2.8f, -1.5f, -4.5f},
@@ -335,17 +335,16 @@ public class GemController : MonoBehaviour{
 
     if (gemsAreNotNull()){
       if(Input.GetKeyUp(KeyCode.Space) && allGemsConnected()){
-        tableDataText.text = tableText();
-        System.IO.File.WriteAllText("../../Desktop/quatData.text", quatData);
-        System.IO.File.WriteAllText("../../Desktop/angleData.text", angleData);
+        //tableDataText.text = tableText();
+        //System.IO.File.WriteAllText("../../Desktop/quatData.text", quatData);
+        //System.IO.File.WriteAllText("../../Desktop/angleData.text", angleData);
+        //Instantiate(ball, Vector3.zero, cubeRotation);
 
-        Instantiate(ball, Vector3.zero, cubeRotation);
+        firstAngleMethod = !firstAngleMethod;
 
       }
 
       if (Input.GetMouseButton(0)){
-        //safeMode = true;
-
         //calibrate gems
         for (int i = 0; i < gemCount; i++){
           gem[i].CalibrateAzimuth();
@@ -360,33 +359,44 @@ public class GemController : MonoBehaviour{
       for (int i = 0; i < gemCount; i++){
         currentState[i] = gem[i].Rotation * sideOrientation[i];
       }
-      stabalizeGems();
+      //stabalizeGems();
       getCubeRotation();
-      float cubeAngle = Quaternion.Angle(cubeRotation, Quaternion.identity);
-
-      // if(cubeAngle > 170){
-      //   safeMode = true;
-      //   cubeRotation = safeRotation;
-      // }
-      // else{
-      //   safeMode = false;
-      //   safeRotation = cubeRotation;
-      // }
-
-      matchStateToCube();
+      //matchStateToCube();
 
       transform.rotation = cubeRotation;
 
       calculateAngles();
+      float cubeAngle = Quaternion.Angle(cubeRotation, Quaternion.identity);
+      stateText.text = displayText() + cubeAngle.ToString("#.0") + " " + allGemsConnected()
+        + "\n"  + firstAngleMethod;
 
-
-      stateText.text = displayText() + cubeAngle.ToString("#.0") + " " + safeMode;
-
-      //if(allGemsConnected() && safeMode){
-        //tableDataText.text = tableText();
-          //System.IO.File.WriteAllText("../../Desktop/quatData.text", quatData);
-          //System.IO.File.WriteAllText("../../Desktop/angleData.text", angleData);
+      //if(allGemsConnected() && allGemsConnected()){
+      //tableDataText.text = tableText();
+      //System.IO.File.WriteAllText("../../Desktop/quatData.text", quatData);
+      //System.IO.File.WriteAllText("../../Desktop/angleData.text", angleData);
       //}
+    }
+  }
+
+  void calculateAngles(){
+    for (int i = 0; i < gemCount; i++){
+        currentState[i] = checkAndFixQuaternion(currentState[i], cubeRotation);
+        Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
+
+
+        if (firstAngleMethod){
+          angle[i] = Quaternion.Angle(cubeRotation, currentState[i]);
+          angle[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
+        }
+        else{
+          angle[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
+          angle[i] *= -angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
+        }
+        angle[i] = (angle[i] + 360) % 360;
+
+        //turn this off when getting bug data
+        //angle[i] -= bugFixAngle(i);
+        //angle[i] = (angle[i] + 360) % 360;
     }
   }
 
@@ -429,36 +439,22 @@ public class GemController : MonoBehaviour{
     }
   }
 
-  void calculateAngles(){
-    for (int i = 0; i < gemCount; i++){
-        Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
-      //angle[i] = Quaternion.Angle(cubeRotation, currentState[i]);
-      angle[i] = Vector3.Angle(q * axisNorm[i],  axisNorm[i]);
-
-      //rethink this
-      angle[i] *= angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
-      angle[i] = (angle[i] + 360) % 360;
-
-      //turn this off when getting bug data
-      //angle[i] -= bugFixAngle(i);
-      //angle[i] = (angle[i] + 360) % 360;
-    }
-  }
-
   int angleSign (Vector3 v1, Vector3 v2, Vector3 normalVector){
     Vector3 crossProduct = Vector3.Cross(v1, v2);
     float dotProduct = (Vector3.Dot(crossProduct, normalVector));
     if (dotProduct > 0){
-      return -1;
+      return 1;
     }
-    return 1;
+    return -1;
   }
 
   string displayText(){
     string outputMe = "";
     for (int i = 0; i < gemCount; i++){
-      outputMe += gem[i].State.ToString() + ": " + angle[i].ToString("#.0")
-      + ":   " + getAngleError(angle[i], 0).ToString("#.0") + "\n";
+    //  outputMe += gem[i].State.ToString() + ": " + angle[i].ToString("#.0")
+    //  + ":   " + getAngleError(angle[i], 0).ToString("#.0") + "\n";
+
+      outputMe += gem[i].State.ToString() + ": " + angle[i].ToString("#.0") + "\n";
     }
     return outputMe;
   }
@@ -587,24 +583,58 @@ public class GemController : MonoBehaviour{
 
 
     if(count != 0){
-      float ratio = 1 / (float)count;
+      Vector4 addedRotation = Vector4.zero;
       for (int i = 0; i < count; i++){
-        //cubeRotation = Quaternion.Lerp(Quaternion.identity, rotationData[i], ratio) * cubeRotation;
-        cubeRotation = Quaternion.Slerp(Quaternion.identity, rotationData[i], ratio) * cubeRotation;
-        //cubeRotation = cubeRotation * Quaternion.Slerp(Quaternion.identity, rotationData[i], ratio);
+
+        //Temporary values
+        float w = 0.0f;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+
+        if (i != 0){
+          rotationData[i] = checkAndFixQuaternion(rotationData[i], rotationData[0]);
+        }
+
+        float addDet = 1.0f / (float)(i+1);
+        addedRotation.w += rotationData[i].w;
+        w = addedRotation.w * addDet;
+        addedRotation.x += rotationData[i].x;
+        x = addedRotation.x * addDet;
+        addedRotation.y += rotationData[i].y;
+        y = addedRotation.y * addDet;
+        addedRotation.z += rotationData[i].z;
+        z = addedRotation.z * addDet;
+
+        //Normalize. Note: experiment to see whether you
+        //can skip this step.
+        float lengthD = 1.0f / (w*w + x*x + y*y + z*z);
+        w *= lengthD;
+        x *= lengthD;
+        y *= lengthD;
+        z *= lengthD;
+
+        //The result is valid right away, without
+        //first going through the entire array.
+        cubeRotation = new Quaternion(x, y, z, w);
 
         //useful links
-          //http://forum.unity3d.com/threads/average-quaternions.86898/
-          //http://wiki.unity3d.com/index.php/Averaging_Quaternions_and_Vectors
-          //http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf
-          //https://github.com/Algoryx/agxUnity/blob/master/AgXUnity/Utils/AverageQuaternion.cs
-          //https://gist.github.com/jankolkmeier/8543156
+        //http://forum.unity3d.com/threads/average-quaternions.86898/
+        //http://wiki.unity3d.com/index.php/Averaging_Quaternions_and_Vectors
+        //http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf
+        //https://github.com/Algoryx/agxUnity/blob/master/AgXUnity/Utils/AverageQuaternion.cs
+        //https://gist.github.com/jankolkmeier/8543156
       }
     }
+  }
 
-     cubeRotation = Quaternion.LookRotation(
-       currentState[1] * axis[1],currentState[0] * axis[0])
-       * Quaternion.AngleAxis(90, Vector3.up);
+  //Changes the sign of the quaternion components. This is not the same as the inverse.
+  Quaternion checkAndFixQuaternion(Quaternion newQ, Quaternion firstQ){
+    float dot = Quaternion.Dot(newQ, firstQ);
+    if(dot < 0.0f){
+      return new Quaternion(-newQ.x, -newQ.y, -newQ.z, -newQ.w);
+    }
+    return newQ;
   }
 
 

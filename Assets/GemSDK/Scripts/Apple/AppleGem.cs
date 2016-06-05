@@ -171,7 +171,7 @@ namespace GemSDK.Unity.Apple
 			if (_gem == null)
 				throw new Exception("OnErrorOccured called on non-existing/disconnected gem");
 
-			if (error == 6 || error == 10)
+			if (error == 6)
 			{
 				Debug.LogErrorFormat("{0}: timed out, trying to reconnect...", _gem.Address);
 				_gem.Connect();
@@ -191,7 +191,7 @@ namespace GemSDK.Unity.Apple
 
 			if (_gem == null)
 				throw new Exception("OnStateChanged called on non-existing/disconnected gem");
-
+			
 			switch (state)
 			{
 			case NativeWrapper.GemState.Connected:
@@ -262,3 +262,4 @@ namespace GemSDK.Unity.Apple
 		}
 	}
 }
+

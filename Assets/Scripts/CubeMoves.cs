@@ -20,7 +20,6 @@ public class CubeMoves : MonoBehaviour {
   Quaternion[] rotationData = new Quaternion[12];
   bool smallChange = true;
   bool[] gemIsConnected = new bool[gemCount];
-  public Transform cubeParent;
   bool wasFullyConnected = false;
 
   Vector3[] axis = new Vector3[6];
@@ -431,7 +430,6 @@ public class CubeMoves : MonoBehaviour {
       for(int i = 0; i < gemCount; i++){
         doSpin(i);
       }
-      //cubeParent.transform.rotation = cubeRotation;
     }
     else{
       stateText[0].text = "Connecting, please wait...   ";
@@ -470,8 +468,8 @@ public class CubeMoves : MonoBehaviour {
     cubeRotation = Quaternion.identity;
     int count = 0;
     if (gemCount >= 2){
-      //if (gem[0].State == GemState.Connected && gem[1].State == GemState.Connected){
-      if (gemIsConnected[0] && gemIsConnected[1]){
+      if (gem[0].State == GemState.Connected && gem[1].State == GemState.Connected){
+        //if (gemIsConnected[0] && gemIsConnected[1]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[1] * axis[1],currentState[0] * axis[0])
         * Quaternion.AngleAxis(90, Vector3.up);
@@ -479,15 +477,15 @@ public class CubeMoves : MonoBehaviour {
       }
     }
     if (gemCount >= 3){
-      //if (gem[0].State == GemState.Connected && gem[2].State == GemState.Connected){
-      if (gemIsConnected[0] && gemIsConnected[2]){
+      if (gem[0].State == GemState.Connected && gem[2].State == GemState.Connected){
+        //if (gemIsConnected[0] && gemIsConnected[2]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[2] * -axis[2], currentState[0] * axis[0]);
         count++;
       }
 
-      //if (gem[1].State == GemState.Connected && gem[2].State == GemState.Connected){
-      if (gemIsConnected[1] && gemIsConnected[2]){
+      if (gem[1].State == GemState.Connected && gem[2].State == GemState.Connected){
+        //if (gemIsConnected[1] && gemIsConnected[2]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[2] * -axis[2], currentState[1] * axis[1])
         * Quaternion.AngleAxis(90, Vector3.back);
@@ -495,16 +493,16 @@ public class CubeMoves : MonoBehaviour {
       }
     }
     if (gemCount >= 4){
-      //if (gem[0].State == GemState.Connected && gem[3].State == GemState.Connected){
-      if (gemIsConnected[0] && gemIsConnected[3]){
+      if (gem[0].State == GemState.Connected && gem[3].State == GemState.Connected){
+        //if (gemIsConnected[0] && gemIsConnected[3]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[3] * axis[3], currentState[0] * axis[0])
         * Quaternion.AngleAxis(-90, Vector3.up);
         count++;
       }
 
-      //if (gem[2].State == GemState.Connected && gem[3].State == GemState.Connected){
-      if (gemIsConnected[2] && gemIsConnected[3]){
+      if (gem[2].State == GemState.Connected && gem[3].State == GemState.Connected){
+        //if (gemIsConnected[2] && gemIsConnected[3]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[2] * -axis[2], currentState[3] * axis[3])
         * Quaternion.AngleAxis(-90, Vector3.back);
@@ -512,23 +510,23 @@ public class CubeMoves : MonoBehaviour {
       }
     }
     if (gemCount >= 5){
-      //if (gem[0].State == GemState.Connected && gem[4].State == GemState.Connected){
-      if (gemIsConnected[0] && gemIsConnected[4]){
+      if (gem[0].State == GemState.Connected && gem[4].State == GemState.Connected){
+        //if (gemIsConnected[0] && gemIsConnected[4]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[4] * axis[4], currentState[0] * axis[0]);
         count++;
       }
 
-      //if (gem[1].State == GemState.Connected && gem[4].State == GemState.Connected){
-      if (gemIsConnected[1] && gemIsConnected[4]){
+      if (gem[1].State == GemState.Connected && gem[4].State == GemState.Connected){
+        //if (gemIsConnected[1] && gemIsConnected[4]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[4] * axis[4], currentState[1] * axis[1])
         * Quaternion.AngleAxis(90, Vector3.back);
         count++;
       }
 
-      //if (gem[3].State == GemState.Connected && gem[4].State == GemState.Connected){
-      if (gemIsConnected[3] && gemIsConnected[4]){
+      if (gem[3].State == GemState.Connected && gem[4].State == GemState.Connected){
+        //if (gemIsConnected[3] && gemIsConnected[4]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[4] * axis[4], currentState[3] * axis[3])
         * Quaternion.AngleAxis(-90, Vector3.back);
@@ -536,31 +534,31 @@ public class CubeMoves : MonoBehaviour {
       }
     }
     if (gemCount == 6){
-      //if (gem[1].State == GemState.Connected && gem[5].State == GemState.Connected){
-      if (gemIsConnected[1] && gemIsConnected[5]){
+      if (gem[1].State == GemState.Connected && gem[5].State == GemState.Connected){
+        //if (gemIsConnected[1] && gemIsConnected[5]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[1] * axis[1], currentState[5] * -axis[5])
         * Quaternion.AngleAxis(90, Vector3.up);
         count++;
       }
 
-      //if (gem[2].State == GemState.Connected && gem[5].State == GemState.Connected){
-      if (gemIsConnected[2] && gemIsConnected[5]){
+      if (gem[2].State == GemState.Connected && gem[5].State == GemState.Connected){
+        //if (gemIsConnected[2] && gemIsConnected[5]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[2] * -axis[2], currentState[5] * -axis[5]);
         count++;
       }
 
-      //if (gem[3].State == GemState.Connected && gem[5].State == GemState.Connected){
-      if (gemIsConnected[3] && gemIsConnected[5]){
+      if (gem[3].State == GemState.Connected && gem[5].State == GemState.Connected){
+        //if (gemIsConnected[3] && gemIsConnected[5]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[3] * axis[3], currentState[5] * -axis[5])
         * Quaternion.AngleAxis(-90, Vector3.up);
         count++;
       }
 
-      //if (gem[4].State == GemState.Connected && gem[5].State == GemState.Connected){
-      if (gemIsConnected[4] && gemIsConnected[5]){
+      if (gem[4].State == GemState.Connected && gem[5].State == GemState.Connected){
+        //if (gemIsConnected[4] && gemIsConnected[5]){
         rotationData[count] = Quaternion.LookRotation(
         currentState[4] * axis[4], currentState[5] * -axis[5]);
         count++;
@@ -569,16 +567,58 @@ public class CubeMoves : MonoBehaviour {
 
 
     if(count != 0){
-      float ratio = 1 / (float)count;
+      Vector4 addedRotation = Vector4.zero;
       for (int i = 0; i < count; i++){
-        //cubeRotation = Quaternion.Lerp(Quaternion.identity, rotationData[i], ratio) * cubeRotation;
-        cubeRotation = Quaternion.Slerp(Quaternion.identity, rotationData[i], ratio) * cubeRotation;
+
+        //Temporary values
+        float w = 0.0f;
+        float x = 0.0f;
+        float y = 0.0f;
+        float z = 0.0f;
+
+        if (i != 0){
+          rotationData[i] = checkAndFixQuaternion(rotationData[i], rotationData[0]);
+        }
+
+        float addDet = 1.0f / (float)(i+1);
+        addedRotation.w += rotationData[i].w;
+        w = addedRotation.w * addDet;
+        addedRotation.x += rotationData[i].x;
+        x = addedRotation.x * addDet;
+        addedRotation.y += rotationData[i].y;
+        y = addedRotation.y * addDet;
+        addedRotation.z += rotationData[i].z;
+        z = addedRotation.z * addDet;
+
+        //Normalize. Note: experiment to see whether you
+        //can skip this step.
+        float lengthD = 1.0f / (w*w + x*x + y*y + z*z);
+        w *= lengthD;
+        x *= lengthD;
+        y *= lengthD;
+        z *= lengthD;
+
+        //The result is valid right away, without
+        //first going through the entire array.
+        cubeRotation = new Quaternion(x, y, z, w);
+
+        //useful links
+        //http://forum.unity3d.com/threads/average-quaternions.86898/
+        //http://wiki.unity3d.com/index.php/Averaging_Quaternions_and_Vectors
+        //http://www.acsu.buffalo.edu/~johnc/ave_quat07.pdf
+        //https://github.com/Algoryx/agxUnity/blob/master/AgXUnity/Utils/AverageQuaternion.cs
+        //https://gist.github.com/jankolkmeier/8543156
       }
     }
+  }
 
-    // cubeRotation = Quaternion.LookRotation(
-    //   currentState[1] * axis[1],currentState[0] * axis[0])
-    //   * Quaternion.AngleAxis(90, Vector3.up);
+  //Changes the sign of the quaternion components. This is not the same as the inverse.
+  Quaternion checkAndFixQuaternion(Quaternion newQ, Quaternion firstQ){
+    float dot = Quaternion.Dot(newQ, firstQ);
+    if(dot < 0.0f){
+      return new Quaternion(-newQ.x, -newQ.y, -newQ.z, -newQ.w);
+    }
+    return newQ;
   }
 
   void checkConnections(){
@@ -652,28 +692,28 @@ public class CubeMoves : MonoBehaviour {
   bool updateDecider(int i){
     bool needsUpdateNow = false;
     float angle = angleCounter[i];
+    currentState[i] = checkAndFixQuaternion(currentState[i], cubeRotation);
 
     if(gemIsConnected[i]){
       Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
-      //angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
-        angleCounter[i] = Quaternion.Angle(cubeRotation, currentState[i]);
-      angleCounter[i] *= angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
-      //angleCounter[i] *= angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
+      angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
+      angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
 
-      // angleCounter[i] = (angleCounter[i] + 360) % 360;
+      //angleCounter[i] = Quaternion.Angle(cubeRotation, currentState[i]);
+      //angleCounter[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
 
-      if(!originRotate && firstRun){
-        //calibrateFixer[i] = angleCounter[i];
-          //calibrateFixer[i] = angleCounter[i] - Mathf.Round( angleCounter[i]/45  )*45;
-      }
-      //angleCounter[i] =  angleCounter[i] - calibrateFixer[i];
       angleCounter[i] = (angleCounter[i] + 360) % 360;
 
           //turn this off when getting bug data
-      angleCounter[i] -= bugFixAngle(i);
-      angleCounter[i] = (angleCounter[i] + 360) % 360;
+      //angleCounter[i] -= bugFixAngle(i);
+      //angleCounter[i] = (angleCounter[i] + 360) % 360;
 
-      if(angleIsTooBig(angle, angleCounter[i])){
+      if(angleSignChanged(angle, angleCounter[i])){
+        angleCounter[i] = 360 - angleCounter[i];
+        angleCounter[i] = (angleCounter[i] + 360) % 360;
+      }
+      
+      else if(angleIsTooBig(angle, angleCounter[i])){
         angleCounter[i] = angle;
       }
 
@@ -699,11 +739,24 @@ public class CubeMoves : MonoBehaviour {
     if (180 < delta) {
       delta = 360 - delta;
     }
-    if(delta > 40){
+    if(delta > 30){
       stateText[0].text = "Connecting, please wait...   ";
       return true;
     }
     //stateText[0].text = moves;
+    return false;
+  }
+
+  bool angleSignChanged(float angle1, float angle2){
+    float lowerBound = 5;
+    float upperBound = 355;
+    float min =  Mathf.Min(angle1, angle2);
+    float max =  Mathf.Max(angle1, angle2);
+    float sum = angle1 + angle2;
+    sum = (sum + 360) % 360;
+    if (min > lowerBound && max < upperBound && (sum > upperBound || sum < lowerBound )) {
+      return true;
+    }
     return false;
   }
 
@@ -785,9 +838,9 @@ public class CubeMoves : MonoBehaviour {
     Vector3 crossProduct = Vector3.Cross(v1, v2);
     float dotProduct = (Vector3.Dot(crossProduct, normalVector));
     if (dotProduct > 0){
-      return -1;
+      return 1;
     }
-    return 1;
+    return -1;
   }
 
   void updateLogic(int layerToUpdate, bool clockwise){

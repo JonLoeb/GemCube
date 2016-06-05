@@ -73,6 +73,8 @@ namespace GemSDK.Unity.Apple
 					isScanning = true;
 				}
 			}
+
+			Debug.Log("Scan started");
 		}
 
 		private void StopScan()
@@ -85,6 +87,8 @@ namespace GemSDK.Unity.Apple
 					isScanning = false;
 				}
 			}
+
+			Debug.Log("Scan stopped");
 		}
 
 		[MonoPInvokeCallback(typeof(NativeWrapper.OnReadyCallback))]
@@ -143,7 +147,7 @@ namespace GemSDK.Unity.Apple
 						return;
 				}
 
-				NativeWrapper.stopScan();
+				instance.StopScan();
 			}
 		}
 	}
