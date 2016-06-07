@@ -76,6 +76,7 @@
 -define:UNITY_EDITOR_64
 -define:UNITY_EDITOR_OSX
 'Assets/GemSDK/Scenes/AllDataGemController.cs'
+'Assets/GemSDK/Scenes/CalibrateController.cs'
 'Assets/GemSDK/Scenes/GemController.cs'
 'Assets/GemSDK/Scenes/MultipleGemsController.cs'
 'Assets/GemSDK/Scripts/Android/AndroidGem.cs'

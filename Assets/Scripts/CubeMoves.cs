@@ -434,6 +434,7 @@ public class CubeMoves : MonoBehaviour {
       }
       else{
         for(int i = 0; i< gemCount; i++){
+          //match state to cube
           currentState[i] = currentState[i] * Quaternion.FromToRotation(currentState[i] * axis[i], cubeRotation * axis[i]);
 
           needsUpdate[i] = updateDecider(i);

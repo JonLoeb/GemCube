@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\GemSDK\Scenes\AllDataGemController.cs" />
+     <Compile Include="Assets\GemSDK\Scenes\CalibrateController.cs" />
      <Compile Include="Assets\GemSDK\Scenes\GemController.cs" />
      <Compile Include="Assets\GemSDK\Scenes\MultipleGemsController.cs" />
      <Compile Include="Assets\GemSDK\Scripts\Android\AndroidGem.cs" />
