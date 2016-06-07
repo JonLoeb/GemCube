@@ -695,7 +695,8 @@ public class CubeMoves : MonoBehaviour {
     //   currentState[i] = stabilizers[i] * currentState[i];
     // }
 
-    if(needsUpdate[i] && !ignoreUpdate(angleCounter[i], 15)){
+    //if(needsUpdate[i] && !ignoreUpdate(angleCounter[i], 2)){
+    if(needsUpdate[i]){
       updateLogic(i, clockwiseDirection[i]);
       doMove(i);
     }
@@ -742,6 +743,8 @@ public class CubeMoves : MonoBehaviour {
 
     if(gemIsConnected[i]){
       Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
+      //Quaternion q = currentState[i] * Quaternion.Inverse(cubeRotation);
+
       angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
       //angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
         angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
@@ -765,11 +768,11 @@ public class CubeMoves : MonoBehaviour {
         //angleCounter[i] = angle;
       }
 
-      if (angle % 90 < 45 && angleCounter[i] % 90 > 45){
+      if (angle % 90 < 45 && angleCounter[i] % 90 >= 45){
         needsUpdateNow = true;
         clockwiseDirection[i] = true;
       }
-      if (angle % 90 > 45 && angleCounter[i] % 90 < 45){
+      if (angle % 90 > 45 && angleCounter[i] % 90 <= 45){
         needsUpdateNow = true;
         clockwiseDirection[i] = false;
       }
@@ -777,6 +780,20 @@ public class CubeMoves : MonoBehaviour {
       // if(needsUpdateNow){
       //   firstRun = true;
       // }
+    }
+    if(needsUpdateNow){
+      if((angle >= 0 && angle <= 45 && angleCounter[i] >= 315 && angleCounter[i] <= 360) ||   (angleCounter[i] >= 0 && angleCounter[i] <= 45 && angle >= 315 && angle <= 360)){
+        needsUpdateNow = false;
+      }
+      if((angle >= 45 && angle <= 90 && angleCounter[i] >= 90 && angleCounter[i] <= 135) ||   (angleCounter[i] >= 45 && angleCounter[i] <= 90 && angle >= 90 && angle <= 135)){
+        needsUpdateNow = false;
+      }
+      if((angle >= 135 && angle <= 180 && angleCounter[i] >= 180 && angleCounter[i] <= 225) ||   (angleCounter[i] >= 135 && angleCounter[i] <= 180 && angle >= 180 && angle <= 225)){
+        needsUpdateNow = false;
+      }
+      if((angle >= 225 && angle <= 270 && angleCounter[i] >= 270 && angleCounter[i] <= 315) ||   (angleCounter[i] >= 225 && angleCounter[i] <= 270 && angle >= 270 && angle <= 315)){
+        needsUpdateNow = false;
+      }
     }
 
     return needsUpdateNow;
@@ -802,7 +819,7 @@ public class CubeMoves : MonoBehaviour {
     float max =  Mathf.Max(angle1, angle2);
     float sum = angle1 + angle2;
     sum = (sum + 360) % 360;
-    if (min > lowerBound && max < upperBound && (sum > upperBound || sum < lowerBound )) {
+    if (min > lowerBound && max < upperBound && ((sum + 360) % 360 > upperBound || (sum + 360) % 360 < lowerBound )) {
       return true;
     }
     return false;
