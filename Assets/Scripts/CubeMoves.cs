@@ -451,12 +451,16 @@ public class CubeMoves : MonoBehaviour {
           //float range = 6 + (20 * (Quaternion.Angle(Quaternion.identity, cubeRotation)/180));
           if(ignoreUpdate(angleCounter[i], 19)){
             angle = (angle + 360) % 360;
+
+
+            // If angle is close to 90 make it 90
             angle = Mathf.Round(angle/90)*90;
             angle = (angle + 360) % 360;
           }
           foreach (Piece c in animateUs) {
+
             c.transform.rotation = Quaternion.AngleAxis(angle, cubeRotation * axis[i]) * c.transform.rotation;
-            //c.transform.RotateAround(Vector3.zero, cubeRotation * axis[i], angle);
+              //c.transform.RotateAround(Vector3.zero, cubeRotation * axis[i], angle);
           }
         }
         else{
@@ -738,11 +742,13 @@ public class CubeMoves : MonoBehaviour {
 
     if(gemIsConnected[i]){
       Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
-      //angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
+      angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
       //angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
+        angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
 
-      angleCounter[i] = Quaternion.Angle(cubeRotation, currentState[i]);
-      angleCounter[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
+
+      //angleCounter[i] = Quaternion.Angle(cubeRotation, currentState[i]);
+      //angleCounter[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
 
       angleCounter[i] = (angleCounter[i] + 360) % 360;
 
@@ -756,7 +762,7 @@ public class CubeMoves : MonoBehaviour {
       }
 
       else if(angleIsTooBig(angle, angleCounter[i])){
-        angleCounter[i] = angle;
+        //angleCounter[i] = angle;
       }
 
       if (angle % 90 < 45 && angleCounter[i] % 90 > 45){
