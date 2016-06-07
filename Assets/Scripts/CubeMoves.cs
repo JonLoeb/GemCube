@@ -334,7 +334,7 @@ public class CubeMoves : MonoBehaviour {
     if (Input.GetMouseButton(0)){
       resetAll();
     }
-    //else if (allGemsConnected()){
+    //else if (allGemsConnected() || !firstRun){
     else {
 
       rotateCube();
@@ -391,7 +391,8 @@ public class CubeMoves : MonoBehaviour {
         currentState[i] =  Quaternion.Inverse(sideOrientation[i]) * gem[i].Rotation * sideOrientation[i];
       }
       else{
-        //gem[i].CalibrateAzimuth();
+        //doesnt really need to be calibrated
+        gem[i].CalibrateAzimuth();
         currentState[i] = gem[i].Rotation * sideOrientation[i];
       }
       stabilizers[i] = stabilizer(i);
@@ -442,14 +443,14 @@ public class CubeMoves : MonoBehaviour {
       }
     }
 
-    if(fullyConnected() || wasFullyConnected || true){
+    if(allGemsConnected() || wasFullyConnected){
       resticker();
       for(int i = 0; i < gemCount; i++){
         if(useAngleMethod){
           getLayer(i);
           float angle = angleCounter[i] + spinFixer[i];
           //float range = 6 + (20 * (Quaternion.Angle(Quaternion.identity, cubeRotation)/180));
-          if(ignoreUpdate(angleCounter[i], 19)){
+          if(ignoreUpdate(angleCounter[i], 15)){
             angle = (angle + 360) % 360;
 
 
@@ -678,15 +679,6 @@ public class CubeMoves : MonoBehaviour {
     }
   }
 
-  bool fullyConnected(){
-    for (int i = 0; i < gemCount; i++){
-      if(gem[i].State != GemState.Connected){
-        return false;
-      }
-    }
-    wasFullyConnected = true;
-    return true;
-  }
 
   void doSpin(int i) {
 
@@ -743,15 +735,14 @@ public class CubeMoves : MonoBehaviour {
 
     if(gemIsConnected[i]){
       Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
-      //Quaternion q = currentState[i] * Quaternion.Inverse(cubeRotation);
 
-      angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
-      //angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
-        angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
+      //angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
+        //angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
+      //angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
 
 
-      //angleCounter[i] = Quaternion.Angle(cubeRotation, currentState[i]);
-      //angleCounter[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
+      angleCounter[i] = Quaternion.Angle(cubeRotation, currentState[i]);
+      angleCounter[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
 
       angleCounter[i] = (angleCounter[i] + 360) % 360;
 
@@ -888,6 +879,7 @@ public class CubeMoves : MonoBehaviour {
         return false;
       }
     }
+    wasFullyConnected = true;
     return true;
   }
 
