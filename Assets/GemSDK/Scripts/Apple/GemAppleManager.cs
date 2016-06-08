@@ -33,6 +33,8 @@ namespace GemSDK.Unity.Apple
 
 		public void Disconnect()
 		{
+			instance.StopScan();
+
 			lock (AppleGem.Gems)
 			{
 				foreach (AppleGem gem in AppleGem.Gems)
