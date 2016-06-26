@@ -46,6 +46,7 @@ public class CubeMoves : MonoBehaviour {
   bool[] needsUpdate = new bool[6];
   string moves = "";
   string sideOrder = "ULFRBD";
+  public string[] sideColor = new string[6];
 
 
 
@@ -273,12 +274,12 @@ public class CubeMoves : MonoBehaviour {
     // for (int i = 0; i < gemCount; i++){
     //   gem[i] = GemManager.Instance.GetGem(i);
     // }
-    gem[0] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:DD");
-    gem[1] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:E6");
-    gem[2] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:3A");
-    gem[3] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:69");
-    gem[4] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:4D");
-    gem[5] =  GemManager.Instance.GetGem("D0:B5:C2:90:7E:2F");
+    gem[0] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:DD");//white
+    gem[1] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:E6");//orange
+    gem[2] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:3A");//green
+    gem[3] =  GemManager.Instance.GetGem("D0:B5:C2:90:78:E4");//red
+    gem[4] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:4D");//blue
+    gem[5] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:6D");//yellow
 
 
     axisNorm[0] = Vector3.left;//U
@@ -344,7 +345,16 @@ public class CubeMoves : MonoBehaviour {
       }
       firstRun = false;
       for (int i = 0; i < gemCount; i++){
-        stateText[i+1].text = sideOrder[i] + ": " + gem[i].State + ": " + (angleCounter[i]).ToString("#.0");
+        stateText[i+1].text = sideColor[i] + ": " + gem[i].State + ": " + (angleCounter[i]).ToString("#.0");
+        //stateText[i+1].text = sideOrder[i] + ": " +  gemIsConnected[i].ToString() + ": " + (angleCounter[i]).ToString("#.0");
+        if (gemIsConnected[i] && false){
+          //stateText[i+1].text = sideOrder[i] + ": " + (angleCounter[i]).ToString("#.0");
+          //stateText[i+1].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.0") + '°';
+          stateText[i+1].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.") + '°';
+
+        }
+
+
         //stateText[i+1].text = sideOrder[i] + ": " + gemIsConnected[i].ToString() + ": " + (angleCounter[i]).ToString("#.0");
       }
     }
