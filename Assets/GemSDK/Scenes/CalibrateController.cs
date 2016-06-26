@@ -14,6 +14,7 @@ public class CalibrateController : MonoBehaviour{
   float[] angle = new float[gemCount];
 
   public Text stateText;
+  public Text[] layerText  = new Text[6];
   public Text tableDataText;
   string quatData = "";
   string angleData = "";
@@ -297,12 +298,12 @@ public class CalibrateController : MonoBehaviour{
     //To get gem by number instead of address, on Android the Gem should be paired to Gem SDK Utility app
     //gem = GemManager.Instance.GetGem(0);
 
-    gem[0] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:DD");
-    gem[1] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:E6");
-    gem[2] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:3A");
-    gem[3] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:69");
-    gem[4] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:4D");
-    gem[5] =  GemManager.Instance.GetGem("D0:B5:C2:90:7E:2F");
+    gem[0] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:DD");//white
+    gem[1] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:E6");//orange
+    gem[2] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:3A");//green
+    gem[3] =  GemManager.Instance.GetGem("D0:B5:C2:90:78:E4");//red
+    gem[4] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:4D");//blue
+    gem[5] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:6D");//yellow
 
     for (int i = 0; i < gemCount; i++){
       stabalizer[i] = Quaternion.identity;
@@ -378,8 +379,10 @@ public class CalibrateController : MonoBehaviour{
 
       calculateAngles();
       float cubeAngle = Quaternion.Angle(cubeRotation, Quaternion.identity);
-      stateText.text = displayText() + cubeAngle.ToString("#.0") + " " + allGemsConnected()
-        + "\n"  + firstAngleMethod;
+
+      displayText();
+      stateText.text = "Cube: " + cubeAngle.ToString("#.0") + " " + allGemsConnected()
+        + "\n"  + "QuatMethod: " + firstAngleMethod;
 
       //if(allGemsConnected() && allGemsConnected()){
       //tableDataText.text = tableText();
@@ -392,7 +395,8 @@ public class CalibrateController : MonoBehaviour{
   void calculateAngles(){
     for (int i = 0; i < gemCount; i++){
         currentState[i] = checkAndFixQuaternion(currentState[i], cubeRotation);
-        Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
+        //Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
+        Quaternion q = currentState[i] * Quaternion.Inverse(cubeRotation);
 
 
         if (firstAngleMethod){
@@ -473,15 +477,11 @@ public class CalibrateController : MonoBehaviour{
     return -1;
   }
 
-  string displayText(){
-    string outputMe = "";
+  void displayText(){
+    string layer = "ULFRBD";
     for (int i = 0; i < gemCount; i++){
-    //  outputMe += gem[i].State.ToString() + ": " + angle[i].ToString("#.0")
-    //  + ":   " + getAngleError(angle[i], 0).ToString("#.0") + "\n";
-
-      outputMe += gem[i].State.ToString() + ": " + angle[i].ToString("#.0") + "\n";
+      layerText[i].text = layer[i] + " " + gem[i].State.ToString() + ": " + angle[i].ToString("#.0") + "\n";
     }
-    return outputMe;
   }
 
   string tableText(){
