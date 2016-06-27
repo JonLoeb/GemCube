@@ -43,11 +43,13 @@ namespace GemSDK.Unity.Apple
 
 		public delegate void OnCombinedDataCallback(IntPtr gem, IntPtr quaternion, IntPtr acceleration);
 
+		public delegate void OnTapDataCallback(IntPtr gem, uint direction);
+
 		[DllImport(DLLName)]
 		public static extern void init(OnReadyCallback onReady, OnInitializationErrorCallback onInitError, OnDeviceDiscoveredCallback onDeviceDisc);
 
 		[DllImport(DLLName)]
-		public static extern void connectGem(IntPtr gem, OnErrorOccurredCallback onError, OnStateChangedCallback onStateChanged, OnCombinedDataCallback onCombinedData);
+		public static extern void connectGem(IntPtr gem, OnErrorOccurredCallback onError, OnStateChangedCallback onStateChanged, OnCombinedDataCallback onCombinedData, OnTapDataCallback onTapData);
 
 		[DllImport(DLLName)]
 		public static extern void disconnectGem(IntPtr gem);

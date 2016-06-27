@@ -1,6 +1,0 @@
-framework module GemSDK {
-  umbrella header "GemSDK.h"
-
-  export *
-  module * { export * }
-}

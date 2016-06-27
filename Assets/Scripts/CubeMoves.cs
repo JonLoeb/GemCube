@@ -336,13 +336,22 @@ public class CubeMoves : MonoBehaviour {
       resetAll();
     }
     //else if (allGemsConnected() || !firstRun){
+      //else if (allGemsConnected()){
     else {
 
-      rotateCube();
-      if(smallChange){
-        stateText[0].text = moves;
-        //stateText[0].text = Quaternion.Angle(Quaternion.identity, cubeRotation).ToString("#.0");
-      }
+    //  if(allGemsConnected()){
+
+        rotateCube();
+        if(smallChange){
+          stateText[0].text = moves;
+          //stateText[0].text = Quaternion.Angle(Quaternion.identity, cubeRotation).ToString("#.0");
+        }
+    //  }
+      // else{
+      //   stateText[0].text = "Connecting, please wait...   ";
+      // }
+
+
       firstRun = false;
       for (int i = 0; i < gemCount; i++){
         stateText[i+1].text = sideColor[i] + ": " + gem[i].State + ": " + (angleCounter[i]).ToString("#.0");
@@ -358,6 +367,7 @@ public class CubeMoves : MonoBehaviour {
         //stateText[i+1].text = sideOrder[i] + ": " + gemIsConnected[i].ToString() + ": " + (angleCounter[i]).ToString("#.0");
       }
     }
+
   }
   void resetAll(){
     moves = "";
@@ -447,6 +457,8 @@ public class CubeMoves : MonoBehaviour {
         for(int i = 0; i< gemCount; i++){
           //match state to cube
           currentState[i] = currentState[i] * Quaternion.FromToRotation(currentState[i] * axis[i], cubeRotation * axis[i]);
+            //currentState[i] =  Quaternion.FromToRotation(currentState[i] * axis[i], cubeRotation * axis[i]) * currentState[i];
+
 
           needsUpdate[i] = updateDecider(i);
         }
@@ -460,7 +472,7 @@ public class CubeMoves : MonoBehaviour {
           getLayer(i);
           float angle = angleCounter[i] + spinFixer[i];
           //float range = 6 + (20 * (Quaternion.Angle(Quaternion.identity, cubeRotation)/180));
-          if(ignoreUpdate(angleCounter[i], 15)){
+          if(ignoreUpdate(angleCounter[i], 18)){
             angle = (angle + 360) % 360;
 
 
@@ -471,7 +483,9 @@ public class CubeMoves : MonoBehaviour {
           foreach (Piece c in animateUs) {
 
             c.transform.rotation = Quaternion.AngleAxis(angle, cubeRotation * axis[i]) * c.transform.rotation;
-              //c.transform.RotateAround(Vector3.zero, cubeRotation * axis[i], angle);
+              //c.transform.rotation = Quaternion.AngleAxis(angle, axis[i]) * c.transform.rotation;
+
+            //c.transform.RotateAround(Vector3.zero, cubeRotation * axis[i], angle);
           }
         }
         else{
@@ -491,8 +505,8 @@ public class CubeMoves : MonoBehaviour {
 
   Quaternion stabilizer(int i){
     return  Quaternion.Inverse(Quaternion.LookRotation(
-             currentState[i] * Vector3.forward,
-             currentState[i] * Vector3.up));
+    currentState[i] * Vector3.forward,
+    currentState[i] * Vector3.up));
 
     //return Quaternion.identity;
   }
@@ -747,7 +761,7 @@ public class CubeMoves : MonoBehaviour {
       Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
 
       //angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
-        //angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
+      //angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
       //angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
 
 
@@ -756,7 +770,7 @@ public class CubeMoves : MonoBehaviour {
 
       angleCounter[i] = (angleCounter[i] + 360) % 360;
 
-          //turn this off when getting bug data
+      //turn this off when getting bug data
       //angleCounter[i] -= bugFixAngle(i);
       //angleCounter[i] = (angleCounter[i] + 360) % 360;
 
@@ -765,10 +779,12 @@ public class CubeMoves : MonoBehaviour {
         angleCounter[i] = (angleCounter[i] + 360) % 360;
       }
 
+      //check for jump in angle
       else if(angleIsTooBig(angle, angleCounter[i])){
         //angleCounter[i] = angle;
       }
 
+      //check for update
       if (angle % 90 < 45 && angleCounter[i] % 90 >= 45){
         needsUpdateNow = true;
         clockwiseDirection[i] = true;
@@ -778,10 +794,9 @@ public class CubeMoves : MonoBehaviour {
         clockwiseDirection[i] = false;
       }
 
-      // if(needsUpdateNow){
-      //   firstRun = true;
-      // }
+
     }
+    //do this to check if we are passing 90 and not 45, avoid false positives
     if(needsUpdateNow){
       if((angle >= 0 && angle <= 45 && angleCounter[i] >= 315 && angleCounter[i] <= 360) ||   (angleCounter[i] >= 0 && angleCounter[i] <= 45 && angle >= 315 && angle <= 360)){
         needsUpdateNow = false;
@@ -814,14 +829,18 @@ public class CubeMoves : MonoBehaviour {
   }
 
   bool angleSignChanged(float angle1, float angle2){
-    float lowerBound = 5;
-    float upperBound = 355;
+    float delta = 0.2f;
+
     float min =  Mathf.Min(angle1, angle2);
     float max =  Mathf.Max(angle1, angle2);
     float sum = angle1 + angle2;
     sum = (sum + 360) % 360;
-    if (min > lowerBound && max < upperBound && ((sum + 360) % 360 > upperBound || (sum + 360) % 360 < lowerBound )) {
-      return true;
+
+    //FIX THIS!!!!!
+    if (min > delta && min < (180 - delta) && max < (360 - delta) && max > (180 + delta)) {
+      if  (sum > (360 - delta) ||  sum < delta ) {
+          return true;
+      }
     }
     return false;
   }
@@ -860,24 +879,24 @@ public class CubeMoves : MonoBehaviour {
 
   void annimateLayer(int layerIndex) {
     center[layerIndex].transform.rotation =
-      (Quaternion.Inverse(cubeRotation) * currentState[layerIndex])
-      * center[layerIndex].transform.rotation;
-      center[layerIndex].transform.RotateAround(Vector3.zero, axis[layerIndex], spinFixer[layerIndex]);
+    (Quaternion.Inverse(cubeRotation) * currentState[layerIndex])
+    * center[layerIndex].transform.rotation;
+    center[layerIndex].transform.RotateAround(Vector3.zero, axis[layerIndex], spinFixer[layerIndex]);
     for (int i = 0; i < 8; i++){
       if (corner[i].isOnFace(layerIndex)){
         corner[i].transform.rotation =
-          (Quaternion.Inverse(cubeRotation) * currentState[layerIndex])
-          * corner[i].transform.rotation;
-          corner[i].transform.RotateAround(Vector3.zero, axis[layerIndex], spinFixer[layerIndex]);
+        (Quaternion.Inverse(cubeRotation) * currentState[layerIndex])
+        * corner[i].transform.rotation;
+        corner[i].transform.RotateAround(Vector3.zero, axis[layerIndex], spinFixer[layerIndex]);
       }
     }
 
     for (int i = 0; i < 12; i++){
       if (edge[i].isOnFace(layerIndex)){
         edge[i].transform.rotation =
-          (Quaternion.Inverse(cubeRotation) * currentState[layerIndex])
-           * edge[i].transform.rotation;
-          edge[i].transform.RotateAround(Vector3.zero, axis[layerIndex], spinFixer[layerIndex]);
+        (Quaternion.Inverse(cubeRotation) * currentState[layerIndex])
+        * edge[i].transform.rotation;
+        edge[i].transform.RotateAround(Vector3.zero, axis[layerIndex], spinFixer[layerIndex]);
       }
     }
   }

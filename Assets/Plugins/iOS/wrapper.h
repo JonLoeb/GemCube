@@ -11,7 +11,7 @@ extern "C"
 #endif
     
     void init(OnReadyCallback onReady, OnInitializationErrorCallback onInitError, OnDeviceDiscoveredCallback onDeviceDisc);
-    void connectGem(Gem* gem, OnErrorOccurredCallback onError, OnStateChangedCallback onStateChanged, OnCombinedDataCallback onCombinedData);
+    void connectGem(Gem* gem, OnErrorOccurredCallback onError, OnStateChangedCallback onStateChanged, OnCombinedDataCallback onCombinedData, OnTapDataCallback onTapData);
     void disconnectGem(Gem* gem);
     void startScan();
     void stopScan();

@@ -2,7 +2,7 @@
 
 @implementation GemListener
 
-- (instancetype)initWithGem:(Gem*)gem onErrorCallback:(OnErrorOccurredCallback)onErrorOccurred stateChangedCallback:(OnStateChangedCallback)onStateChanged combinedDataCallback:(OnCombinedDataCallback)onCombinedDataCallback
+- (instancetype)initWithGem:(Gem*)gem onErrorCallback:(OnErrorOccurredCallback)onErrorOccurred stateChangedCallback:(OnStateChangedCallback)onStateChanged onCombinedDataCallback:(OnCombinedDataCallback)onCombinedData onTapDataCallback:(OnTapDataCallback)onTapData
 {
     if(!(self = [super init]))
     {
@@ -12,14 +12,15 @@
     self.gem = gem;
     _onErrorOccurredCallback = onErrorOccurred;
     _onStateChangedCallback = onStateChanged;
-    _onCombinedDataCallback = onCombinedDataCallback;
+    _onCombinedDataCallback = onCombinedData;
+    _onTapDataCallback = onTapData;
     
     return self;
 }
 
 - (void)onErrorOccurred:(NSError*)error
 {
-    _onErrorOccurredCallback(self.gem, error.code);
+    _onErrorOccurredCallback(self.gem, (int)error.code);
 }
 
 - (void)onStateChanged:(GemState)state
@@ -39,6 +40,11 @@
         acceleration[i] = [[data.acceleration objectAtIndex:i] floatValue];
     
     _onCombinedDataCallback(self.gem, quaternion, acceleration);
+}
+
+- (void)onTapData:(unsigned int)direction
+{
+    _onTapDataCallback(self.gem, direction);
 }
 
 @end
