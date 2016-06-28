@@ -65,6 +65,7 @@
      <Compile Include="Assets\GemSDK\Scripts\Windows\NativeWrapper.cs" />
      <Compile Include="Assets\GemSDK\Scripts\Windows\WindowsBleManager.cs" />
      <Compile Include="Assets\GemSDK\Scripts\Windows\WindowsGem.cs" />
+     <Compile Include="Assets\Scripts\CubeLogic.cs" />
      <Compile Include="Assets\Scripts\CubeMoves.cs" />
      <Compile Include="Assets\Scripts\Piece.cs" />
      <None Include="Assets\GemSDK\changelog.txt" />

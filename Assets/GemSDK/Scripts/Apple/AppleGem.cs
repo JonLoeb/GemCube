@@ -86,11 +86,11 @@ namespace GemSDK.Unity.Apple
 			}
 		}
 
-		private NativeWrapper.OnCombinedDataCallback onCombinedData = new NativeWrapper.OnCombinedDataCallback(OnCombinedData);
+		//private NativeWrapper.OnCombinedDataCallback onCombinedData = new NativeWrapper.OnCombinedDataCallback(OnCombinedData);
 
 		internal void Connect()
 		{
-			NativeWrapper.connectGem(GemPointer, OnErrorOccured, OnStateChanged, onCombinedData, OnTapData);
+			NativeWrapper.connectGem(GemPointer, OnErrorOccured, OnStateChanged, OnCombinedData, OnTapData);
 			initalized = true;
 		}
 

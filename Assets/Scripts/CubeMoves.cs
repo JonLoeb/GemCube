@@ -354,12 +354,12 @@ public class CubeMoves : MonoBehaviour {
 
       firstRun = false;
       for (int i = 0; i < gemCount; i++){
-        stateText[i+1].text = sideColor[i] + ": " + gem[i].State + ": " + (angleCounter[i]).ToString("#.0");
+        stateText[i+1].text = gem[i].State + ": " + (angleCounter[i]).ToString("#.0");
         //stateText[i+1].text = sideOrder[i] + ": " +  gemIsConnected[i].ToString() + ": " + (angleCounter[i]).ToString("#.0");
-        if (gemIsConnected[i] && false){
+        if (gemIsConnected[i]){
           //stateText[i+1].text = sideOrder[i] + ": " + (angleCounter[i]).ToString("#.0");
           //stateText[i+1].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.0") + '°';
-          stateText[i+1].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.") + '°';
+          stateText[i+1].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.0") + '°';
 
         }
 
