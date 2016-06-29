@@ -22,6 +22,8 @@ public class CubeLogic : MonoBehaviour {
 	Quaternion[] sideOrientation = new Quaternion[6];
 	Quaternion[] stabalizer = new Quaternion[gemCount];
 
+	bool firstRun = true;
+
 
 
 	Quaternion[] cornerPermutation = new Quaternion[8];
@@ -50,6 +52,7 @@ public class CubeLogic : MonoBehaviour {
 	//bool[] clockwiseDirection = new bool[6];
 	string moves = "";
 	string sideOrder = "ULFRBD";
+	char[] axisOrder = new char[] {'x', 'y', 'z'};
 
 	//runs once at start of program
 	void Start () {
@@ -99,7 +102,7 @@ public class CubeLogic : MonoBehaviour {
 	//resets all variables to make cube solved
 	void resetAll(){
 		moves = "";
-
+		firstRun = true;
 
 
 		sideOrientation[0] = Quaternion.identity;
@@ -114,6 +117,7 @@ public class CubeLogic : MonoBehaviour {
 		//resetEdges();
 		cornerOrder = new int[] {0,1,2,3,4,5,6,7};
 		edgeOrder = new int[] {0,1,2,3,4,5,6,7,8,9,10,11};
+		axisOrder = new char[] {'x', 'y', 'z'};
 		for (int i = 0; i < 6; i++){
 			centerPermutation[i] = Quaternion.identity;
 		}
@@ -139,12 +143,13 @@ public class CubeLogic : MonoBehaviour {
 		calculateStabalizers();
 		stabalizeGems();
 
+		cubeRotation = Quaternion.identity;
 		rotateCube(true);
 	}
 
 	//gets data from gems and calls other methods to make the cube move
 	void rotateCube (bool reset){
-		cubeRotation = Quaternion.identity;
+		//cubeRotation = Quaternion.identity;
 
 		if(!reset){
 			for (int i = 0; i < gemCount; i++){
@@ -170,12 +175,21 @@ public class CubeLogic : MonoBehaviour {
 			}
 		}
 
-		if (allGemsConnected()){
+		if (allGemsConnected() && !reset){
+
+			//calibrates the gems after they are all connected
+			if(firstRun){
+				resetAll();
+				firstRun = false;
+			}
+
 			resticker();
+			transform.rotation = cubeRotation;
 			for(int i = 0; i < gemCount; i++){
 				rotateSide(i);
-
 			}
+			printCubeRotations(prevCubeRotation);
+
 			for(int i = 0; i < gemCount; i++){
 				doSpin(i);
 			}
@@ -198,8 +212,8 @@ public class CubeLogic : MonoBehaviour {
 		}
 		foreach (Transform c in animateUs) {
 
-			c.transform.rotation = Quaternion.AngleAxis(angle, cubeRotation * axis[i]) * c.transform.rotation;
-			//c.transform.rotation = Quaternion.AngleAxis(angle, axis[i]) * c.transform.rotation;
+			//c.rotation = Quaternion.AngleAxis(angle, cubeRotation * axis[i]) * c.rotation;
+			c.localRotation = Quaternion.AngleAxis(angle, axis[i]) * c.localRotation;
 
 			//c.transform.RotateAround(Vector3.zero, cubeRotation * axis[i], angle);
 		}
@@ -248,6 +262,75 @@ public class CubeLogic : MonoBehaviour {
 			}
 		}
 	}
+
+	void printCubeRotations(Quaternion prevCubeRotation){
+
+		float x = (cubeRotation.eulerAngles.x + 360) % 360;
+		float prevX = (prevCubeRotation.eulerAngles.x + 360) % 360;
+
+		float y = (cubeRotation.eulerAngles.y + 360) % 360;
+		float prevY = (prevCubeRotation.eulerAngles.y + 360) % 360;
+
+		float z = (cubeRotation.eulerAngles.z + 360) % 360;
+		float prevZ = (prevCubeRotation.eulerAngles.z + 360) % 360;
+
+		TurnDirection t =  updateDirection(prevX, x);
+		char temp;
+
+
+		if(updateDirection(prevX, x) == TurnDirection.CounterClockwise){
+			moves += axisOrder[0];
+			moves += " ";
+
+			temp = axisOrder[1];
+			axisOrder[1] = axisOrder[2];
+			axisOrder[2] = temp;
+		}
+		if(updateDirection(prevX, x) == TurnDirection.Clockwise){
+			moves += axisOrder[0];
+			moves += "' ";
+
+			temp = axisOrder[1];
+			axisOrder[1] = axisOrder[2];
+			axisOrder[2] = temp;
+		}
+
+		if(updateDirection(prevY, y) == TurnDirection.Clockwise){
+			moves += axisOrder[1];
+			moves += " ";
+
+			temp = axisOrder[0];
+			axisOrder[0] = axisOrder[2];
+			axisOrder[2] = temp;
+		}
+		if(updateDirection(prevX, x) == TurnDirection.CounterClockwise){
+			moves += axisOrder[1];
+			moves += "' ";
+
+			temp = axisOrder[0];
+			axisOrder[0] = axisOrder[2];
+			axisOrder[2] = temp;
+		}
+
+		if(updateDirection(prevZ, z) == TurnDirection.CounterClockwise){
+			moves += axisOrder[2];
+			moves += " ";
+
+			temp = axisOrder[0];
+			axisOrder[0] = axisOrder[1];
+			axisOrder[1] = temp;
+		}
+		if(updateDirection(prevX, x) == TurnDirection.Clockwise){
+			moves += axisOrder[2];
+			moves += "' ";
+
+			temp = axisOrder[0];
+			axisOrder[0] = axisOrder[1];
+			axisOrder[1] = temp;
+		}
+
+	}
+
 
 	bool cornerIsOnLayer(int cornerIndex, int layerIndex){
 		if(layerIndex == 0){
@@ -564,22 +647,21 @@ public class CubeLogic : MonoBehaviour {
 		return animateUs;
 	}
 
-	//before each side is rotated resticker is called to bring the rotate each peice to the side that it is on,
-	//and then rotate entire the cube the way the cube is rotated
+	//before each side is rotated resticker is called to bring the rotate each peice to the side that it is on
 	void resticker(){
 		for (int i = 0; i < 6; i++){
-			center[i].transform.rotation = cubeRotation * centerPermutation[i];
-			//center[i].transform.rotation = centerPermutation[i];
+			//center[i].rotation = cubeRotation * centerPermutation[i];
+			center[i].localRotation = centerPermutation[i];
 
 		}
 		for (int i = 0; i < 12; i++){
-			edge[i].transform.rotation = cubeRotation * edgePermutation[i];
-			//edge[i].transform.rotation = edgePermutation[i];
+			//edge[i].rotation = cubeRotation * edgePermutation[i];
+			edge[i].localRotation = edgePermutation[i];
 
 		}
 		for (int i = 0; i < 8; i++){
-			corner[i].transform.rotation = cubeRotation * cornerPermutation[i];
-			//corner[i].transform.rotation = cornerPermutation[i];
+			//corner[i].rotation = cubeRotation * cornerPermutation[i];
+			corner[i].localRotation = cornerPermutation[i];
 
 		}
 	}
