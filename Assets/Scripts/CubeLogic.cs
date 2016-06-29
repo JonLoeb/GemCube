@@ -7,15 +7,18 @@ using UnityEngine.UI;
 public class CubeLogic : MonoBehaviour {
 
 	const int gemCount = 6;
-	bool hasRun = false;
 	IGem[] gem = new IGem[6];
 
-	Quaternion[] currentState = new Quaternion[gemCount];
-	Quaternion cubeRotation = Quaternion.identity;
-	//bool[] gemIsConnected = new bool[gemCount];
+	enum TurnDirection {Clockwise, CounterClockwise, NoTurn};
 
-	Vector3[] axis = new Vector3[6];
-	Vector3[] axisNorm = new Vector3[6];
+	Quaternion[] faceRotation = new Quaternion[gemCount];
+
+	//make me global
+	Quaternion cubeRotation = Quaternion.identity;
+
+	static readonly Vector3[] axis = {Vector3.up, Vector3.left, Vector3.back, Vector3.right, Vector3.forward, Vector3.down};
+	static readonly Vector3[] axisNorm = {Vector3.left, Vector3.back, Vector3.right, Vector3.forward, Vector3.left, Vector3.back};
+
 	Quaternion[] sideOrientation = new Quaternion[6];
 	Quaternion[] stabalizer = new Quaternion[gemCount];
 
@@ -25,33 +28,30 @@ public class CubeLogic : MonoBehaviour {
 	Quaternion[] edgePermutation  = new Quaternion[12];
 	Quaternion[] centerPermutation  = new Quaternion[6];
 
-	//Piece[] corner = new Piece[8];
-	//Piece[] edge  = new Piece[12];
-	//Piece[] center = new Piece[6];
-	//Piece[] animateUs = new Piece[9];
+
 
 	public Transform[] corner = new Transform[8];
 	public Transform[] edge = new Transform[12];
 	public Transform[] center = new Transform[6];
-	Transform[] animateUs = new Transform[9];
+	//Transform[] animateUs = new Transform[9];
 
 	int[] cornerOrder = new int[] {0,1,2,3,4,5,6,7};
 	int[] edgeOrder = new int[] {0,1,2,3,4,5,6,7,8,9,10,11};
 
 
 
-	public Text[] stateText = new Text[gemCount+1];
-	bool reset = false;
+	public Text[] layerText = new Text[gemCount];
+	public Text stateText;
+
 	float[] angleCounter = new float[gemCount];
 	float[] prevAngleCounter = new float[gemCount];
 	float[] spinFixer = new float[gemCount];
 
-	bool[] clockwiseDirection = new bool[6];
-	bool[] needsUpdate = new bool[6];
+	//bool[] clockwiseDirection = new bool[6];
 	string moves = "";
 	string sideOrder = "ULFRBD";
-	public string[] sideColor = new string[6];
 
+	//runs once at start of program
 	void Start () {
 
 		GemManager.Instance.Connect();
@@ -83,35 +83,24 @@ public class CubeLogic : MonoBehaviour {
 			else {
 
 				rotateCube(false);
-				stateText[0].text = moves;
+				stateText.text = moves;
 
+				string[] sideColor = new string[] {"White", "Orange", "Green", "Red", "Blue", "Yellow"};
 				for (int i = 0; i < gemCount; i++){
-					stateText[i+1].text = gem[i].State + ": " + (angleCounter[i]).ToString("#.0");
+					layerText[i].text = gem[i].State + ": " + (angleCounter[i]).ToString("#.0");
 					if (gem[i].State == GemState.Connected){
-						stateText[i+1].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.0") + '°';
+						layerText[i].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.0") + '°';
 					}
 				}
 			}
 		}
 	}
 
+	//resets all variables to make cube solved
 	void resetAll(){
 		moves = "";
-		hasRun = false;
 
-		axis[0] = Vector3.up;//U
-		axis[1] = Vector3.left;//L
-		axis[2] = Vector3.back;//F
-		axis[3] = Vector3.right;//R
-		axis[4] = Vector3.forward;//B
-		axis[5] = Vector3.down;//D
 
-		axisNorm[0] = Vector3.left;//U
-		axisNorm[1] = Vector3.back;//L
-		axisNorm[2] = Vector3.right;//F
-		axisNorm[3] = Vector3.forward;//R
-		axisNorm[4] = Vector3.left;//B
-		axisNorm[5] = Vector3.back;//D
 
 		sideOrientation[0] = Quaternion.identity;
 		sideOrientation[1] = Quaternion.AngleAxis(90, axisNorm[1]);
@@ -137,11 +126,9 @@ public class CubeLogic : MonoBehaviour {
 
 
 		for (int i = 0; i < gemCount; i++){
-			needsUpdate[i] = false;
-			//clockwiseDirection[i] = true;
 
 			gem[i].CalibrateAzimuth();
-			currentState[i] = gem[i].Rotation * sideOrientation[i];
+			faceRotation[i] = gem[i].Rotation * sideOrientation[i];
 
 
 			prevAngleCounter[i] = 0;
@@ -154,57 +141,39 @@ public class CubeLogic : MonoBehaviour {
 
 		rotateCube(true);
 	}
+
+	//gets data from gems and calls other methods to make the cube move
 	void rotateCube (bool reset){
-		if(reset){
-			cubeRotation = Quaternion.identity;
-			//prevCubeRotation = Quaternion.identity;
-		}
-		else {
+		cubeRotation = Quaternion.identity;
+
+		if(!reset){
 			for (int i = 0; i < gemCount; i++){
-				currentState[i] = gem[i].Rotation * sideOrientation[i];
+				faceRotation[i] = gem[i].Rotation * sideOrientation[i];
 			}
 			stabalizeGems();
 
 		}
 		Quaternion prevCubeRotation = cubeRotation;
 		//checkConnections();
-		getCubeRotation();
+		cubeRotation = getCubeRotation();
 		if(Quaternion.Angle(prevCubeRotation, cubeRotation) > 50){
 			cubeRotation = prevCubeRotation;
 		}
 		else{
 			for(int i = 0; i< gemCount; i++){
 				//match state to cube
-				currentState[i] = currentState[i] * Quaternion.FromToRotation(currentState[i] * axis[i], cubeRotation * axis[i]);
-				//currentState[i] =  Quaternion.FromToRotation(currentState[i] * axis[i], cubeRotation * axis[i]) * currentState[i];
+				faceRotation[i] = faceRotation[i] * Quaternion.FromToRotation(faceRotation[i] * axis[i], cubeRotation * axis[i]);
+				//faceRotation[i] =  Quaternion.FromToRotation(faceRotation[i] * axis[i], cubeRotation * axis[i]) * faceRotation[i];
 
 				prevAngleCounter[i] = angleCounter[i];
 				getAngle(i);
-				//needsUpdate[i] = updateDecider(	prevAngleCounter[i], 	angleCounter[i] ,i);
 			}
 		}
 
 		if (allGemsConnected()){
 			resticker();
 			for(int i = 0; i < gemCount; i++){
-				getLayer(i);
-				float angle = angleCounter[i] + spinFixer[i];
-				//float range = 6 + (20 * (Quaternion.Angle(Quaternion.identity, cubeRotation)/180));
-				if(ignoreUpdate(angleCounter[i], 18)){
-					angle = (angle + 360) % 360;
-
-
-					// If angle is close to 90 make it 90
-					angle = Mathf.Round(angle/90)*90;
-					angle = (angle + 360) % 360;
-				}
-				foreach (Transform c in animateUs) {
-
-					c.transform.rotation = Quaternion.AngleAxis(angle, cubeRotation * axis[i]) * c.transform.rotation;
-					//c.transform.rotation = Quaternion.AngleAxis(angle, axis[i]) * c.transform.rotation;
-
-					//c.transform.RotateAround(Vector3.zero, cubeRotation * axis[i], angle);
-				}
+				rotateSide(i);
 
 			}
 			for(int i = 0; i < gemCount; i++){
@@ -214,24 +183,45 @@ public class CubeLogic : MonoBehaviour {
 
 	}
 
-	void doSpin(int i) {
+	//rotates side i of the cube by the angle it calculates (rounds to 90 when close to 90)
+	void rotateSide(int i){
+		Transform[] animateUs = getLayer(i);
+		float angle = angleCounter[i] + spinFixer[i];
+		//float range = 6 + (20 * (Quaternion.Angle(Quaternion.identity, cubeRotation)/180));
+		if(ignoreUpdate(angleCounter[i], 18)){
+			angle = (angle + 360) % 360;
 
-		// if(needsUpdate[i] && ignoreUpdate(angleCounter[i])){
-		//   stabilizers[i] = Quaternion.AngleAxis(angleCounter[i], axis[i]) * stabilizer(i);
-		//   currentState[i] = stabilizers[i] * currentState[i];
-		// }
 
-		//if(needsUpdate[i] && !ignoreUpdate(angleCounter[i], 2)){
-		if(updateDecider(	prevAngleCounter[i], 	angleCounter[i] ,i)){
-			updateLogic(i, clockwiseDirection[i]);
-			doMove(i);
+			// If angle is close to 90 make it 90
+			angle = Mathf.Round(angle/90)*90;
+			angle = (angle + 360) % 360;
 		}
-		//needsUpdate[i] = false;
+		foreach (Transform c in animateUs) {
+
+			c.transform.rotation = Quaternion.AngleAxis(angle, cubeRotation * axis[i]) * c.transform.rotation;
+			//c.transform.rotation = Quaternion.AngleAxis(angle, axis[i]) * c.transform.rotation;
+
+			//c.transform.RotateAround(Vector3.zero, cubeRotation * axis[i], angle);
+		}
 	}
 
-	void  doMove(int layerIndex){
+//after all sides are rotated doSpin is called to update the logic of where peices are,
+//and to update the start configuration for what the cube looks like before rotateSide is called
+	void doSpin(int i) {
+
+		//if(needsUpdate[i] && !ignoreUpdate(angleCounter[i], 2)){
+		TurnDirection t = updateDirection(	prevAngleCounter[i], 	angleCounter[i]);
+		if(t != TurnDirection.NoTurn){
+			updateLogic(i, t == TurnDirection.Clockwise);
+			doMove(i, t == TurnDirection.Clockwise);
+		}
+	}
+
+	//updates the quaternion for each pieces start rotation before a side rotation is done.
+	//Bascially it generates the data for restickering
+	void  doMove(int layerIndex, bool isClockwise){
 		float angle = 90;
-		if(!clockwiseDirection[layerIndex]){
+		if(!isClockwise){
 			angle *= -1;
 		}
 
@@ -241,7 +231,7 @@ public class CubeLogic : MonoBehaviour {
 
 		//stabilizers[layerIndex] = Quaternion.AngleAxis(angleCounter[layerIndex], axis[layerIndex])
 		//    * stabilizer(layerIndex);
-		//currentState[layerIndex] = stabilizers[layerIndex] * currentState[layerIndex];
+		//faceRotation[layerIndex] = stabilizers[layerIndex] * faceRotation[layerIndex];
 
 
 
@@ -258,6 +248,7 @@ public class CubeLogic : MonoBehaviour {
 			}
 		}
 	}
+
 	bool cornerIsOnLayer(int cornerIndex, int layerIndex){
 		if(layerIndex == 0){
 			if (cornerOrder[0] == cornerIndex || cornerOrder[1] == cornerIndex || cornerOrder[2] == cornerIndex || cornerOrder[3] == cornerIndex){
@@ -327,10 +318,12 @@ public class CubeLogic : MonoBehaviour {
 		return false;
 	}
 
-	void updateLogic(int layerToUpdate, bool clockwise){
+	//if a move is done (side rotated past 45 degrees) this will print the move to a string,
+	//and then call updateLogic for that side so each peice now knows which new faces it is touching
+	void updateLogic(int layerToUpdate, bool isClockwise){
 		moves += sideOrder[layerToUpdate];
 		int stop = 1;
-		if(clockwiseDirection[layerToUpdate]){
+		if(isClockwise){
 			moves += " ";
 		}
 		else{
@@ -468,7 +461,9 @@ public class CubeLogic : MonoBehaviour {
 		edgeOrder[9] = temp;
 	}
 
-	void getLayer(int layerIndex) {
+	//returns an array of peices on a the same face to be animated when that face spins
+	Transform[] getLayer(int layerIndex) {
+		Transform[] animateUs = new Transform[9];
 		animateUs[0] = center[layerIndex];
 
 		if(layerIndex == 0){
@@ -566,9 +561,11 @@ public class CubeLogic : MonoBehaviour {
 			animateUs[8] = edge[edgeOrder[11]];
 		}
 
-
+		return animateUs;
 	}
 
+	//before each side is rotated resticker is called to bring the rotate each peice to the side that it is on,
+	//and then rotate entire the cube the way the cube is rotated
 	void resticker(){
 		for (int i = 0; i < 6; i++){
 			center[i].transform.rotation = cubeRotation * centerPermutation[i];
@@ -587,53 +584,59 @@ public class CubeLogic : MonoBehaviour {
 		}
 	}
 
-	void getAngle(int i){
-		float angle = angleCounter[i];
-		currentState[i] = checkAndFixQuaternion(currentState[i], cubeRotation);
+	//sets angleCounter[i] = to the angle that the side is rotated with respect to the core of the cube
+	void getAngle(int sideIndex){
+		float angle = angleCounter[sideIndex];
+		faceRotation[sideIndex] = checkAndFixQuaternion(faceRotation[sideIndex], cubeRotation);
 
-		if(gem[i].State == GemState.Connected){
-			Quaternion q = Quaternion.Inverse(cubeRotation) * currentState[i];
+		if(gem[sideIndex].State == GemState.Connected){
+			Quaternion q = Quaternion.Inverse(cubeRotation) * faceRotation[sideIndex];
 
-			//angleCounter[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
-			//angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], q * axis[i]);
-			//angleCounter[i] *= -angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
+			//angleCounter[sideIndex] = Vector3.Angle(q * axisNorm[sideIndex], axisNorm[sideIndex]);
+			//angleCounter[sideIndex] *= -angleSign(q * axisNorm[sideIndex], axisNorm[sideIndex], q * axis[sideIndex]);
+			//angleCounter[sideIndex] *= -angleSign(q * axisNorm[sideIndex], axisNorm[sideIndex], axis[sideIndex]);
 
 
-			angleCounter[i] = Quaternion.Angle(cubeRotation, currentState[i]);
-			angleCounter[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
+			angleCounter[sideIndex] = Quaternion.Angle(cubeRotation, faceRotation[sideIndex]);
+			angleCounter[sideIndex] *= angleSign(cubeRotation * axisNorm[sideIndex],
+																faceRotation[sideIndex] * axisNorm[sideIndex],
+																cubeRotation * axis[sideIndex]);
 
-			angleCounter[i] = (angleCounter[i] + 360) % 360;
+			angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
 
 			//turn this off when getting bug data
-			//angleCounter[i] -= bugFixAngle(i);
-			//angleCounter[i] = (angleCounter[i] + 360) % 360;
+			//angleCounter[sideIndex] -= bugFixAngle(sideIndex);
+			//angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
 
-			if(angleSignChanged(angle, angleCounter[i])){
-				angleCounter[i] = 360 - angleCounter[i];
-				angleCounter[i] = (angleCounter[i] + 360) % 360;
+			if(angleSignChanged(angle, angleCounter[sideIndex])){
+				angleCounter[sideIndex] = 360 - angleCounter[sideIndex];
+				angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
 			}
 
 			//check for jump in angle
-			else if(angleIsTooBig(angle, angleCounter[i])){
-				//angleCounter[i] = angle;
+			else if(angleIsTooBig(angle, angleCounter[sideIndex])){
+				//angleCounter[sideIndex] = angle;
 			}
 
 		}
 	}
 
+	//checks to see if the difference between two angles is greater than some threashhold (30)
 	bool angleIsTooBig(float angle1, float angle2){
 		float delta = Mathf.Max(angle1, angle2) - Mathf.Min(angle1, angle2);
 		if (180 < delta) {
 			delta = 360 - delta;
 		}
 		if(delta > 30){
-			stateText[0].text = "Connecting, please wait...   ";
+			stateText.text = "Connecting, please wait...   ";
 			return true;
 		}
 		//stateText[0].text = moves;
 		return false;
 	}
 
+	//checks to see if two angles angle1 is close to -angle2
+	//Example (15 degrees is close to -345 degrees)
 	bool angleSignChanged(float angle1, float angle2){
 		float delta = 0.2f;
 
@@ -651,41 +654,42 @@ public class CubeLogic : MonoBehaviour {
 		return false;
 	}
 
-	bool updateDecider(float prevAngle, float currentAngle, int i){
-		bool needsUpdateNow = false;
+	//returns the direction a layer spin is done
+	//returns "NoTurn" if layer spin does not pass 45 degrees
+	TurnDirection updateDirection(float prevAngle, float currentAngle){
+		TurnDirection result = TurnDirection.NoTurn;
 
 
-		//check for update
 		if (prevAngle % 90 < 45 && currentAngle % 90 >= 45){
-			needsUpdateNow = true;
-			clockwiseDirection[i] = true;
+			result = TurnDirection.Clockwise;
 		}
 		if (prevAngle % 90 > 45 && currentAngle % 90 <= 45){
-			needsUpdateNow = true;
-			clockwiseDirection[i] = false;
+			result = TurnDirection.CounterClockwise;
 		}
 
 
 		//do this to check if we are passing 90 and not 45, avoid false positives
-		if(needsUpdateNow){
+		if(result != TurnDirection.NoTurn){
 			if((prevAngle >= 0 && prevAngle <= 45 && currentAngle >= 315 && currentAngle <= 360) ||   (currentAngle >= 0 && currentAngle <= 45 && prevAngle >= 315 && prevAngle <= 360)){
-				needsUpdateNow = false;
+				result = TurnDirection.NoTurn;
 			}
 			if((prevAngle >= 45 && prevAngle <= 90 && currentAngle >= 90 && currentAngle <= 135) ||   (currentAngle >= 45 && currentAngle <= 90 && prevAngle >= 90 && prevAngle <= 135)){
-				needsUpdateNow = false;
+				result = TurnDirection.NoTurn;
 			}
 			if((prevAngle >= 135 && prevAngle <= 180 && currentAngle >= 180 && currentAngle <= 225) ||   (currentAngle >= 135 && currentAngle <= 180 && prevAngle >= 180 && prevAngle <= 225)){
-				needsUpdateNow = false;
+				result = TurnDirection.NoTurn;
 			}
 			if((prevAngle >= 225 && prevAngle <= 270 && currentAngle >= 270 && currentAngle <= 315) ||   (currentAngle >= 225 && currentAngle <= 270 && prevAngle >= 270 && prevAngle <= 315)){
-				needsUpdateNow = false;
+				result = TurnDirection.NoTurn;
 			}
 		}
 
-		return needsUpdateNow;
+		return result;
 	}
 
-	void getCubeRotation(){
+
+	//averages data from all gems to get the rotation of the cube
+	Quaternion  getCubeRotation(){
 		Quaternion[] rotationData = new Quaternion[12];
 		cubeRotation = Quaternion.identity;
 		int count = 0;
@@ -693,7 +697,7 @@ public class CubeLogic : MonoBehaviour {
 			if (gem[0].State == GemState.Connected && gem[1].State == GemState.Connected){
 				//if (gemIsConnected[0] && gemIsConnected[1]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[1] * axis[1],currentState[0] * axis[0])
+				faceRotation[1] * axis[1],faceRotation[0] * axis[0])
 				* Quaternion.AngleAxis(90, Vector3.up);
 				count++;
 			}
@@ -702,14 +706,14 @@ public class CubeLogic : MonoBehaviour {
 			if (gem[0].State == GemState.Connected && gem[2].State == GemState.Connected){
 				//if (gemIsConnected[0] && gemIsConnected[2]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[2] * -axis[2], currentState[0] * axis[0]);
+				faceRotation[2] * -axis[2], faceRotation[0] * axis[0]);
 				count++;
 			}
 
 			if (gem[1].State == GemState.Connected && gem[2].State == GemState.Connected){
 				//if (gemIsConnected[1] && gemIsConnected[2]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[2] * -axis[2], currentState[1] * axis[1])
+				faceRotation[2] * -axis[2], faceRotation[1] * axis[1])
 				* Quaternion.AngleAxis(90, Vector3.back);
 				count++;
 			}
@@ -718,7 +722,7 @@ public class CubeLogic : MonoBehaviour {
 			if (gem[0].State == GemState.Connected && gem[3].State == GemState.Connected){
 				//if (gemIsConnected[0] && gemIsConnected[3]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[3] * axis[3], currentState[0] * axis[0])
+				faceRotation[3] * axis[3], faceRotation[0] * axis[0])
 				* Quaternion.AngleAxis(-90, Vector3.up);
 				count++;
 			}
@@ -726,7 +730,7 @@ public class CubeLogic : MonoBehaviour {
 			if (gem[2].State == GemState.Connected && gem[3].State == GemState.Connected){
 				//if (gemIsConnected[2] && gemIsConnected[3]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[2] * -axis[2], currentState[3] * axis[3])
+				faceRotation[2] * -axis[2], faceRotation[3] * axis[3])
 				* Quaternion.AngleAxis(-90, Vector3.back);
 				count++;
 			}
@@ -735,14 +739,14 @@ public class CubeLogic : MonoBehaviour {
 			if (gem[0].State == GemState.Connected && gem[4].State == GemState.Connected){
 				//if (gemIsConnected[0] && gemIsConnected[4]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[4] * axis[4], currentState[0] * axis[0]);
+				faceRotation[4] * axis[4], faceRotation[0] * axis[0]);
 				count++;
 			}
 
 			if (gem[1].State == GemState.Connected && gem[4].State == GemState.Connected){
 				//if (gemIsConnected[1] && gemIsConnected[4]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[4] * axis[4], currentState[1] * axis[1])
+				faceRotation[4] * axis[4], faceRotation[1] * axis[1])
 				* Quaternion.AngleAxis(90, Vector3.back);
 				count++;
 			}
@@ -750,7 +754,7 @@ public class CubeLogic : MonoBehaviour {
 			if (gem[3].State == GemState.Connected && gem[4].State == GemState.Connected){
 				//if (gemIsConnected[3] && gemIsConnected[4]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[4] * axis[4], currentState[3] * axis[3])
+				faceRotation[4] * axis[4], faceRotation[3] * axis[3])
 				* Quaternion.AngleAxis(-90, Vector3.back);
 				count++;
 			}
@@ -759,7 +763,7 @@ public class CubeLogic : MonoBehaviour {
 			if (gem[1].State == GemState.Connected && gem[5].State == GemState.Connected){
 				//if (gemIsConnected[1] && gemIsConnected[5]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[1] * axis[1], currentState[5] * -axis[5])
+				faceRotation[1] * axis[1], faceRotation[5] * -axis[5])
 				* Quaternion.AngleAxis(90, Vector3.up);
 				count++;
 			}
@@ -767,14 +771,14 @@ public class CubeLogic : MonoBehaviour {
 			if (gem[2].State == GemState.Connected && gem[5].State == GemState.Connected){
 				//if (gemIsConnected[2] && gemIsConnected[5]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[2] * -axis[2], currentState[5] * -axis[5]);
+				faceRotation[2] * -axis[2], faceRotation[5] * -axis[5]);
 				count++;
 			}
 
 			if (gem[3].State == GemState.Connected && gem[5].State == GemState.Connected){
 				//if (gemIsConnected[3] && gemIsConnected[5]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[3] * axis[3], currentState[5] * -axis[5])
+				faceRotation[3] * axis[3], faceRotation[5] * -axis[5])
 				* Quaternion.AngleAxis(-90, Vector3.up);
 				count++;
 			}
@@ -782,7 +786,7 @@ public class CubeLogic : MonoBehaviour {
 			if (gem[4].State == GemState.Connected && gem[5].State == GemState.Connected){
 				//if (gemIsConnected[4] && gemIsConnected[5]){
 				rotationData[count] = Quaternion.LookRotation(
-				currentState[4] * axis[4], currentState[5] * -axis[5]);
+				faceRotation[4] * axis[4], faceRotation[5] * -axis[5]);
 				count++;
 			}
 		}
@@ -832,8 +836,11 @@ public class CubeLogic : MonoBehaviour {
 				//https://gist.github.com/jankolkmeier/8543156
 			}
 		}
+		return cubeRotation;
 	}
 
+	//returns true if ANGLE is within RANGE of a multiple of 90
+	//Example (94 is within 5 of 90)
 	bool ignoreUpdate(float angle, float range){
 		if(angle % 90 < range || angle % 90 > (90-range)){
 			return true;
@@ -850,6 +857,7 @@ public class CubeLogic : MonoBehaviour {
 		return newQ;
 	}
 
+	//returns -1 or 1 based off the direction v2 is rotated from v1 with respect to normalVector
 	int angleSign (Vector3 v1, Vector3 v2, Vector3 normalVector){
 		Vector3 crossProduct = Vector3.Cross(v1, v2);
 		float dotProduct = (Vector3.Dot(crossProduct, normalVector));
@@ -859,6 +867,8 @@ public class CubeLogic : MonoBehaviour {
 		return -1;
 	}
 
+	//called when gems are first receivng data,
+	//used to calculate the correction quaternion for gem data to match what would be expected
 	void calculateStabalizers(){
 		for (int i = 0; i < gemCount; i++){
 			stabalizer[i] = Quaternion.Inverse(Quaternion.LookRotation(
@@ -867,17 +877,17 @@ public class CubeLogic : MonoBehaviour {
 			//gem[i].Rotation * Vector3.forward,
 			//gem[i].Rotation * Vector3.up));
 		}
-
-
-
 	}
 
+	//uses the data calculated by calculateStabalizers() to calibrate the gems
 	void stabalizeGems(){
 		for (int i = 0; i < gemCount; i++){
-			currentState[i] =  stabalizer[i] * currentState[i];
+			faceRotation[i] =  stabalizer[i] * faceRotation[i];
 		}
 	}
 
+	//Old way of updating logic of each corner to solved state
+	//NOT USED ANYMORE
 	void resetCorners(){
 		for (int i = 0; i < 8; i++){
 			for (int j = 0; j < 8; j++){
@@ -895,6 +905,8 @@ public class CubeLogic : MonoBehaviour {
 
 	}
 
+	//Old way of updating logic of each edge to solved state
+	//NOT USED ANYMORE
 	void resetEdges(){
 		for (int i = 0; i < 12; i++){
 			for (int j = 0; j < 12; j++){
@@ -911,6 +923,8 @@ public class CubeLogic : MonoBehaviour {
 		}
 
 	}
+
+	//returns true if all gems are discoverd by the computer
 	bool gemsAreNotNull(){
 		for (int i = 0; i < gemCount; i++){
 			if (gem[i] == null){
@@ -920,6 +934,7 @@ public class CubeLogic : MonoBehaviour {
 		return true;
 	}
 
+	//returns false if any gem is "conneting" or "disconnected"
 	bool allGemsConnected(){
 		for (int i = 0; i < gemCount; i++){
 			//if (gem[i] == null){
@@ -931,6 +946,7 @@ public class CubeLogic : MonoBehaviour {
 		return true;
 	}
 
+	//let bluetooth relax after you quit the program
 	void OnApplicationQuit(){
 		GemManager.Instance.Disconnect();
 	}
