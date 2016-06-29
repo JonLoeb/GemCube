@@ -188,7 +188,7 @@ public class CubeLogic : MonoBehaviour {
 			for(int i = 0; i < gemCount; i++){
 				rotateSide(i);
 			}
-			printCubeRotations(prevCubeRotation);
+			//printCubeRotations(prevCubeRotation);
 
 			for(int i = 0; i < gemCount; i++){
 				doSpin(i);
@@ -265,16 +265,15 @@ public class CubeLogic : MonoBehaviour {
 
 	void printCubeRotations(Quaternion prevCubeRotation){
 
-		float x = (cubeRotation.eulerAngles.x + 360) % 360;
-		float prevX = (prevCubeRotation.eulerAngles.x + 360) % 360;
+		float x = (cubeRotation.eulerAngles.x + 360f) % 360f;
+		float prevX = (prevCubeRotation.eulerAngles.x + 360f) % 360f;
 
-		float y = (cubeRotation.eulerAngles.y + 360) % 360;
-		float prevY = (prevCubeRotation.eulerAngles.y + 360) % 360;
+		float y = (cubeRotation.eulerAngles.y + 360f) % 360f;
+		float prevY = (prevCubeRotation.eulerAngles.y + 360f) % 360f;
 
-		float z = (cubeRotation.eulerAngles.z + 360) % 360;
-		float prevZ = (prevCubeRotation.eulerAngles.z + 360) % 360;
+		float z = (cubeRotation.eulerAngles.z + 360f) % 360f;
+		float prevZ = (prevCubeRotation.eulerAngles.z + 360f) % 360f;
 
-		TurnDirection t =  updateDirection(prevX, x);
 		char temp;
 
 
@@ -282,51 +281,51 @@ public class CubeLogic : MonoBehaviour {
 			moves += axisOrder[0];
 			moves += " ";
 
-			temp = axisOrder[1];
-			axisOrder[1] = axisOrder[2];
-			axisOrder[2] = temp;
+			// temp = axisOrder[1];
+			// axisOrder[1] = axisOrder[2];
+			// axisOrder[2] = temp;
 		}
 		if(updateDirection(prevX, x) == TurnDirection.Clockwise){
 			moves += axisOrder[0];
 			moves += "' ";
 
-			temp = axisOrder[1];
-			axisOrder[1] = axisOrder[2];
-			axisOrder[2] = temp;
+			// temp = axisOrder[1];
+			// axisOrder[1] = axisOrder[2];
+			// axisOrder[2] = temp;
 		}
 
 		if(updateDirection(prevY, y) == TurnDirection.Clockwise){
 			moves += axisOrder[1];
 			moves += " ";
 
-			temp = axisOrder[0];
-			axisOrder[0] = axisOrder[2];
-			axisOrder[2] = temp;
+			// temp = axisOrder[0];
+			// axisOrder[0] = axisOrder[2];
+			// axisOrder[2] = temp;
 		}
-		if(updateDirection(prevX, x) == TurnDirection.CounterClockwise){
+		if(updateDirection(prevY, y) == TurnDirection.CounterClockwise){
 			moves += axisOrder[1];
 			moves += "' ";
 
-			temp = axisOrder[0];
-			axisOrder[0] = axisOrder[2];
-			axisOrder[2] = temp;
+			// temp = axisOrder[0];
+			// axisOrder[0] = axisOrder[2];
+			// axisOrder[2] = temp;
 		}
 
 		if(updateDirection(prevZ, z) == TurnDirection.CounterClockwise){
 			moves += axisOrder[2];
 			moves += " ";
 
-			temp = axisOrder[0];
-			axisOrder[0] = axisOrder[1];
-			axisOrder[1] = temp;
+			// temp = axisOrder[0];
+			// axisOrder[0] = axisOrder[1];
+			// axisOrder[1] = temp;
 		}
-		if(updateDirection(prevX, x) == TurnDirection.Clockwise){
+		if(updateDirection(prevZ, z) == TurnDirection.Clockwise){
 			moves += axisOrder[2];
 			moves += "' ";
 
-			temp = axisOrder[0];
-			axisOrder[0] = axisOrder[1];
-			axisOrder[1] = temp;
+			// temp = axisOrder[0];
+			// axisOrder[0] = axisOrder[1];
+			// axisOrder[1] = temp;
 		}
 
 	}
