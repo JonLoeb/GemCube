@@ -66,8 +66,6 @@
      <Compile Include="Assets\GemSDK\Scripts\Windows\WindowsBleManager.cs" />
      <Compile Include="Assets\GemSDK\Scripts\Windows\WindowsGem.cs" />
      <Compile Include="Assets\Scripts\CubeLogic.cs" />
-     <Compile Include="Assets\Scripts\CubeMoves.cs" />
-     <Compile Include="Assets\Scripts\Piece.cs" />
      <None Include="Assets\GemSDK\changelog.txt" />
  <Reference Include="UnityEngine.UI">
  <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>

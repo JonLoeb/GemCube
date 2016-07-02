@@ -129,7 +129,7 @@ public class CubeLogic : MonoBehaviour {
 	float[] prevAngleCounter = new float[gemCount];
 	float[] spinFixer = new float[gemCount];
 
-	public string moves = "";
+	string moves = "";
 	char[] sideOrder = new char[] {'U', 'L', 'F', 'R', 'B', 'D'};
 
 	//runs once at start of program
@@ -170,9 +170,9 @@ public class CubeLogic : MonoBehaviour {
 
 				string[] sideColor = new string[] {"White", "Orange", "Green", "Red", "Blue", "Yellow"};
 				for (int i = 0; i < gemCount; i++){
-					layerText[i].text = gem[i].State + ": " + (angleCounter[i]).ToString("#.000");
+					layerText[i].text = gem[i].State + ": " + (angleCounter[i]).ToString("#.0");
 					if (gem[i].State == GemState.Connected){
-						layerText[i].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.000") + '°';
+						layerText[i].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.0") + '°';
 					}
 				}
 			}
@@ -813,16 +813,14 @@ public class CubeLogic : MonoBehaviour {
 
 		cubeRotation = fixRounding(cubeRotation);
 		faceRotation[sideIndex] = fixRounding(faceRotation[sideIndex]);
-
 		faceRotation[sideIndex] = checkAndFixQuaternion(faceRotation[sideIndex], cubeRotation);
 
 		if(gem[sideIndex].State == GemState.Connected){
-
-
-			angleCounter[sideIndex] = Quaternion.Angle(cubeRotation, faceRotation[sideIndex]);
+			//angleCounter[sideIndex] = Quaternion.Angle(cubeRotation, faceRotation[sideIndex]);
 			//angleCounter[sideIndex] = Vector3.Angle(cubeRotation * axisNorm[sideIndex], faceRotation[sideIndex] * axisNorm[sideIndex]);
+			//angleCounter[sideIndex] *= angleSign(cubeRotation * axisNorm[sideIndex], faceRotation[sideIndex] * axisNorm[sideIndex], cubeRotation * axis[sideIndex]);
 
-			angleCounter[sideIndex] *= angleSign(cubeRotation * axisNorm[sideIndex], faceRotation[sideIndex] * axisNorm[sideIndex], cubeRotation * axis[sideIndex]);
+			angleCounter[sideIndex] = AngleSigned(cubeRotation * axisNorm[sideIndex], faceRotation[sideIndex] * axisNorm[sideIndex], cubeRotation * axis[sideIndex]);
 
 			angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
 
@@ -830,15 +828,18 @@ public class CubeLogic : MonoBehaviour {
 			//angleCounter[sideIndex] -= bugFixAngle(sideIndex);
 			//angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
 
-			if(angleSignChanged(angle, angleCounter[sideIndex])){
-				angleCounter[sideIndex] = 360 - angleCounter[sideIndex];
-				angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
-			}
+				//angleCounter[sideIndex] = closestToLastAngle(angle, angleCounter[sideIndex]);
 
-			//check for jump in angle
-			else if(angleIsTooBig(angle, angleCounter[sideIndex])){
-				angleCounter[sideIndex] = angle;
-			}
+				// if(angleSignChanged(angle, angleCounter[sideIndex])){
+				// 	angleCounter[sideIndex] = 360 - angleCounter[sideIndex];
+				// 	angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
+				// }
+
+				//check for jump in angle
+				if(angleIsTooBig(angle, angleCounter[sideIndex])){
+					angleCounter[sideIndex] = angle;
+				}
+
 
 		}
 	}
@@ -850,7 +851,7 @@ public class CubeLogic : MonoBehaviour {
 			delta = 360 - delta;
 		}
 		if(delta > 40){
-			stateText.text = "Connecting, please wait...   ";
+			//stateText.text = "Connecting, please wait...   ";
 			return true;
 		}
 		//stateText[0].text = moves;
@@ -860,7 +861,9 @@ public class CubeLogic : MonoBehaviour {
 	//checks to see if two angles angle1 is close to -angle2
 	//Example (15 degrees is close to -345 degrees)
 	bool angleSignChanged(float angle1, float angle2){
-		float delta = 0.01f;
+		//float delta = 0.01f;
+		float delta = 0.2f;
+		//float delta = 10.01f;
 
 		float min =  Mathf.Min(angle1, angle2);
 		float max =  Mathf.Max(angle1, angle2);
@@ -876,10 +879,47 @@ public class CubeLogic : MonoBehaviour {
 		return false;
 	}
 
+	float closestToLastAngle(float prevAngle, float currentAngle){
+		float margin = 2.2f;
+
+		float min =  Mathf.Min(prevAngle, currentAngle);
+		float max =  Mathf.Max(prevAngle, currentAngle);
+		float sum = prevAngle + currentAngle;
+		sum = (sum + 360) % 360;
+
+		float delta = max - min;
+		if (180 < delta) {
+			delta = 360 - delta;
+		}
+
+		if ((prevAngle < 180 && currentAngle > 180) || (prevAngle > 180 && currentAngle < 180)){
+			if (min > margin && min < (180 - margin) && max < (360 - margin) && max > (180 + margin)) {
+				float newAngle = 360 - currentAngle;
+				newAngle = (newAngle + 360) % 360;
+
+				float delta2 = Mathf.Max(prevAngle, newAngle) - Mathf.Min(prevAngle, newAngle);
+				if (180 < delta2) {
+					delta2 = 360 - delta2;
+				}
+
+				if(delta2 < delta){
+					return newAngle;
+				}
+
+
+			}
+		}
+
+		return currentAngle;
+	}
+
 	//returns the direction a layer spin is done
 	//returns "NoTurn" if layer spin does not pass 45 degrees
 	TurnDirection updateDirection(float prevAngle, float currentAngle){
 		TurnDirection result = TurnDirection.NoTurn;
+
+		prevAngle = (prevAngle + 360) % 360;
+		currentAngle = (currentAngle + 360) % 360;
 
 
 		if (prevAngle % 90 < 45 && currentAngle % 90 >= 45){
@@ -1078,6 +1118,12 @@ public class CubeLogic : MonoBehaviour {
 		}
 		return newQ;
 	}
+
+	float AngleSigned(Vector3 v1, Vector3 v2, Vector3 n){
+    return Mathf.Atan2(
+        Vector3.Dot(n, Vector3.Cross(v1, v2)),
+        Vector3.Dot(v1, v2)) * Mathf.Rad2Deg;
+}
 
 	//returns -1 or 1 based off the direction v2 is rotated from v1 with respect to normalVector
 	int angleSign (Vector3 v1, Vector3 v2, Vector3 normalVector){
