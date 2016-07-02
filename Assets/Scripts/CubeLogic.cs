@@ -170,9 +170,9 @@ public class CubeLogic : MonoBehaviour {
 
 				string[] sideColor = new string[] {"White", "Orange", "Green", "Red", "Blue", "Yellow"};
 				for (int i = 0; i < gemCount; i++){
-					layerText[i].text = gem[i].State + ": " + (angleCounter[i]).ToString("#.0");
+					layerText[i].text = gem[i].State + ": " + (angleCounter[i]).ToString("#.000");
 					if (gem[i].State == GemState.Connected){
-						layerText[i].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.0") + '°';
+						layerText[i].text = sideColor[i] + ": " + (angleCounter[i]).ToString("#.000") + '°';
 					}
 				}
 			}
@@ -227,6 +227,8 @@ public class CubeLogic : MonoBehaviour {
 		rotateCube(true);
 	}
 
+
+
 	//gets data from gems and calls other methods to make the cube move
 	void rotateCube (bool reset){
 		//cubeRotation = Quaternion.identity;
@@ -247,9 +249,7 @@ public class CubeLogic : MonoBehaviour {
 		}
 		else{
 			for(int i = 0; i< gemCount; i++){
-				//match state to cube
-				faceRotation[i] = faceRotation[i] * Quaternion.FromToRotation(faceRotation[i] * axis[i], cubeRotation * axis[i]);
-				//faceRotation[i] =  Quaternion.FromToRotation(faceRotation[i] * axis[i], cubeRotation * axis[i]) * faceRotation[i];
+				matchRotationToCube(i);
 
 				prevAngleCounter[i] = angleCounter[i];
 				getAngle(i);
@@ -787,23 +787,42 @@ public class CubeLogic : MonoBehaviour {
 		}
 	}
 
+	Quaternion fixRounding (Quaternion a){
+		float aL = Mathf.Sqrt(a.x*a.x + a.y*a.y + a.z*a.z + a.w*a.w);
+
+		a.x /= aL;
+		a.y /= aL;
+		a.z /= aL;
+		a.w /= aL;
+
+		return a;
+	}
+
+	void matchRotationToCube(int i){
+		//match state to cube
+		Quaternion q = faceRotation[i] * Quaternion.FromToRotation(faceRotation[i] * axis[i], cubeRotation * axis[i]);
+		//Quaternion q =  Quaternion.FromToRotation(faceRotation[i] * axis[i], cubeRotation * axis[i]) * faceRotation[i];
+
+			faceRotation[i] = q;
+		//faceRotation[i] = Quaternion.Slerp(faceRotation[i], q, 0.5f);
+	}
+
 	//sets angleCounter[i] = to the angle that the side is rotated with respect to the core of the cube
 	void getAngle(int sideIndex){
 		float angle = angleCounter[sideIndex];
+
+		cubeRotation = fixRounding(cubeRotation);
+		faceRotation[sideIndex] = fixRounding(faceRotation[sideIndex]);
+
 		faceRotation[sideIndex] = checkAndFixQuaternion(faceRotation[sideIndex], cubeRotation);
 
 		if(gem[sideIndex].State == GemState.Connected){
-			Quaternion q = Quaternion.Inverse(cubeRotation) * faceRotation[sideIndex];
-
-			//angleCounter[sideIndex] = Vector3.Angle(q * axisNorm[sideIndex], axisNorm[sideIndex]);
-			//angleCounter[sideIndex] *= -angleSign(q * axisNorm[sideIndex], axisNorm[sideIndex], q * axis[sideIndex]);
-			//angleCounter[sideIndex] *= -angleSign(q * axisNorm[sideIndex], axisNorm[sideIndex], axis[sideIndex]);
 
 
 			angleCounter[sideIndex] = Quaternion.Angle(cubeRotation, faceRotation[sideIndex]);
-			angleCounter[sideIndex] *= angleSign(cubeRotation * axisNorm[sideIndex],
-			faceRotation[sideIndex] * axisNorm[sideIndex],
-			cubeRotation * axis[sideIndex]);
+			//angleCounter[sideIndex] = Vector3.Angle(cubeRotation * axisNorm[sideIndex], faceRotation[sideIndex] * axisNorm[sideIndex]);
+
+			angleCounter[sideIndex] *= angleSign(cubeRotation * axisNorm[sideIndex], faceRotation[sideIndex] * axisNorm[sideIndex], cubeRotation * axis[sideIndex]);
 
 			angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
 
@@ -818,7 +837,7 @@ public class CubeLogic : MonoBehaviour {
 
 			//check for jump in angle
 			else if(angleIsTooBig(angle, angleCounter[sideIndex])){
-				//angleCounter[sideIndex] = angle;
+				angleCounter[sideIndex] = angle;
 			}
 
 		}
@@ -830,7 +849,7 @@ public class CubeLogic : MonoBehaviour {
 		if (180 < delta) {
 			delta = 360 - delta;
 		}
-		if(delta > 30){
+		if(delta > 40){
 			stateText.text = "Connecting, please wait...   ";
 			return true;
 		}
@@ -841,7 +860,7 @@ public class CubeLogic : MonoBehaviour {
 	//checks to see if two angles angle1 is close to -angle2
 	//Example (15 degrees is close to -345 degrees)
 	bool angleSignChanged(float angle1, float angle2){
-		float delta = 0.2f;
+		float delta = 0.01f;
 
 		float min =  Mathf.Min(angle1, angle2);
 		float max =  Mathf.Max(angle1, angle2);
