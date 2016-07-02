@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class CubeLogic : MonoBehaviour {
 
-	const int gemCount = 2;
+	const int gemCount = 6;
 	IGem[] gem = new IGem[6];
 
 	enum TurnDirection {Clockwise, CounterClockwise, NoTurn};
@@ -16,6 +16,7 @@ public class CubeLogic : MonoBehaviour {
 	Quaternion[] faceRotation = new Quaternion[gemCount];
 
 	Quaternion cubeRotation = Quaternion.identity;
+	Quaternion closestRotationToPrevCubeRotation = Quaternion.identity;
 
 	static readonly Vector3[] axis = {Vector3.up, Vector3.left, Vector3.back, Vector3.right, Vector3.forward, Vector3.down};
 	static readonly Vector3[] axisNorm = {Vector3.left, Vector3.back, Vector3.right, Vector3.forward, Vector3.left, Vector3.back};
@@ -43,108 +44,57 @@ public class CubeLogic : MonoBehaviour {
 
 	//CONVENTION: direction defined by new rotation
 	private static readonly Quaternion[] cubeRotationTable = {
-		// Quaternion.LookRotation(Vector3.forward, Vector3.up),
-		// Quaternion.LookRotation(Vector3.left, Vector3.up), //y
-		// Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
-		// Quaternion.LookRotation(Vector3.right, Vector3.up),//y'
-		// Quaternion.LookRotation(Vector3.forward, Vector3.left),//z
-		// Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
-		// Quaternion.LookRotation(Vector3.forward, Vector3.right),//z'
-		// Quaternion.LookRotation(Vector3.up, Vector3.back),//x
-		// Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
-		// Quaternion.LookRotation(Vector3.down, Vector3.forward),//x'
-		// Quaternion.LookRotation(Vector3.up, Vector3.left),//x z
-		// Quaternion.LookRotation(Vector3.back, Vector3.left),//y2 z'
-		// Quaternion.LookRotation(Vector3.down, Vector3.left),//x' z
-		// Quaternion.LookRotation(Vector3.left, Vector3.back),//y z
-		// Quaternion.LookRotation(Vector3.right, Vector3.back),//y' z'
-		// Quaternion.LookRotation(Vector3.down, Vector3.back),//x' z2
-		// Quaternion.LookRotation(Vector3.up, Vector3.right),//x z'
-		// Quaternion.LookRotation(Vector3.back, Vector3.right),//y2 z
-		// Quaternion.LookRotation(Vector3.down, Vector3.right),//x' z'
-		// Quaternion.LookRotation(Vector3.up, Vector3.forward),//x z2
-		// Quaternion.LookRotation(Vector3.left, Vector3.forward),//y z'
-		// Quaternion.LookRotation(Vector3.right, Vector3.forward),//y' z
-		// Quaternion.LookRotation(Vector3.left, Vector3.down),//y z2
-		// Quaternion.LookRotation(Vector3.right, Vector3.down)//y' z2
-
-
-		Quaternion.LookRotation(Vector3.right, Vector3.down),//y' z2
-		Quaternion.LookRotation(Vector3.left, Vector3.down),//y z2
-		Quaternion.LookRotation(Vector3.right, Vector3.forward),//y' z
-		Quaternion.LookRotation(Vector3.left, Vector3.forward),//y z'
-		Quaternion.LookRotation(Vector3.up, Vector3.forward),//x z2
-		Quaternion.LookRotation(Vector3.down, Vector3.right),//x' z'
-		Quaternion.LookRotation(Vector3.back, Vector3.right),//y2 z
-		Quaternion.LookRotation(Vector3.up, Vector3.right),//x z'
-		Quaternion.LookRotation(Vector3.down, Vector3.back),//x' z2
-		Quaternion.LookRotation(Vector3.right, Vector3.back),//y' z'
-		Quaternion.LookRotation(Vector3.left, Vector3.back),//y z
-		Quaternion.LookRotation(Vector3.down, Vector3.left),//x' z
-		Quaternion.LookRotation(Vector3.back, Vector3.left),//y2 z'
-		Quaternion.LookRotation(Vector3.up, Vector3.left),//x z
-		Quaternion.LookRotation(Vector3.down, Vector3.forward),//x'
-		Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
-		Quaternion.LookRotation(Vector3.up, Vector3.back),//x
-		Quaternion.LookRotation(Vector3.forward, Vector3.right),//z'
-		Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
-		Quaternion.LookRotation(Vector3.forward, Vector3.left),//z
-		Quaternion.LookRotation(Vector3.right, Vector3.up),//y'
-		Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
+		Quaternion.LookRotation(Vector3.forward, Vector3.up),//This is equal to Quaternion.identity
 		Quaternion.LookRotation(Vector3.left, Vector3.up), //y
-		Quaternion.LookRotation(Vector3.forward, Vector3.up)
+		Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
+		Quaternion.LookRotation(Vector3.right, Vector3.up),//y'
+		Quaternion.LookRotation(Vector3.forward, Vector3.left),//z
+		Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
+		Quaternion.LookRotation(Vector3.forward, Vector3.right),//z'
+		Quaternion.LookRotation(Vector3.up, Vector3.back),//x
+		Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
+		Quaternion.LookRotation(Vector3.down, Vector3.forward),//x'
+		Quaternion.LookRotation(Vector3.up, Vector3.left),//x z
+		Quaternion.LookRotation(Vector3.back, Vector3.left),//y2 z'
+		Quaternion.LookRotation(Vector3.down, Vector3.left),//x' z
+		Quaternion.LookRotation(Vector3.left, Vector3.back),//y z
+		Quaternion.LookRotation(Vector3.right, Vector3.back),//y' z'
+		Quaternion.LookRotation(Vector3.down, Vector3.back),//x' z2
+		Quaternion.LookRotation(Vector3.up, Vector3.right),//x z'
+		Quaternion.LookRotation(Vector3.back, Vector3.right),//y2 z
+		Quaternion.LookRotation(Vector3.down, Vector3.right),//x' z'
+		Quaternion.LookRotation(Vector3.up, Vector3.forward),//x z2
+		Quaternion.LookRotation(Vector3.left, Vector3.forward),//y z'
+		Quaternion.LookRotation(Vector3.right, Vector3.forward),//y' z
+		Quaternion.LookRotation(Vector3.left, Vector3.down),//y z2
+		Quaternion.LookRotation(Vector3.right, Vector3.down)//y' z2
 	};
 
 	string[] cubeRotationText = new string[] {
-		// "",
-		// "y ",
-		// "y2 ",
-		// "y' ",
-		// "z ",
-		// "z2 ",
-		// "z' ",
-		// "x ",
-		// "x2 ",
-		// "x' ",
-		// "x z ",
-		// "y2 z' ",
-		// "x' z ",
-		// "y z ",
-		// "y' z' ",
-		// "x' z2 ",
-		// "x z' ",
-		// "y2 z ",
-		// "x' z' ",
-		// "x z2 ",
-		// "y z' ",
-		// "y' z ",
-		// "y z2 ",
-		// "y' z2 "
-
-		"y' z2 ",
-"y z2 ",
-"y' z ",
-"y z' ",
-"x z2 ",
-"x' z' ",
-"y2 z ",
-"x z' ",
-"x' z2 ",
-"y' z' ",
-"y z ",
-"x' z ",
-"y2 z' ",
-"x z ",
-"x' ",
-"x2 ",
-"x ",
-"z' ",
-"z2 ",
-"z ",
-"y' ",
-"y2 ",
-"y ",
-""
+		"",
+		"y ",
+		"y2 ",
+		"y' ",
+		"z ",
+		"z2 ",
+		"z' ",
+		"x ",
+		"x2 ",
+		"x' ",
+		"x z ",
+		"y2 z' ",
+		"x' z ",
+		"y z ",
+		"y' z' ",
+		"x' z2 ",
+		"x z' ",
+		"y2 z ",
+		"x' z' ",
+		"x z2 ",
+		"y z' ",
+		"y' z ",
+		"y z2 ",
+		"y' z2 "
 	};
 
 
@@ -159,7 +109,8 @@ public class CubeLogic : MonoBehaviour {
 
 	//bool[] clockwiseDirection = new bool[6];
 	string moves = "";
-	string sideOrder = "ULFRBD";
+	//string sideOrder = "ULFRBD";
+	char[] sideOrder = new char[] {'U', 'L', 'F', 'R', 'B', 'D'};
 	char[] axisOrder = new char[] {'x', 'y', 'z'};
 
 	//runs once at start of program
@@ -226,6 +177,7 @@ public class CubeLogic : MonoBehaviour {
 		cornerOrder = new int[] {0,1,2,3,4,5,6,7};
 		edgeOrder = new int[] {0,1,2,3,4,5,6,7,8,9,10,11};
 		axisOrder = new char[] {'x', 'y', 'z'};
+		sideOrder = new char[] {'U', 'L', 'F', 'R', 'B', 'D'};
 		for (int i = 0; i < 6; i++){
 			centerPermutation[i] = Quaternion.identity;
 		}
@@ -284,7 +236,7 @@ public class CubeLogic : MonoBehaviour {
 			}
 		}
 
-		if (allGemsConnected() && !reset){
+		if ((allGemsConnected() || true) && !reset){
 
 			//calibrates the gems after they are all connected
 			if(firstRun){
@@ -372,28 +324,158 @@ public class CubeLogic : MonoBehaviour {
 		}
 	}
 
-	string printCubeRotations(Quaternion prevCubeRotation){
+	void reassignFaceLetters(string rotationText){
+		//string sideOrder = "ULFRBD";
+
+		char tempMove;
+		if(rotationText == ""){
+			return;
+		}
+		else if(rotationText == "y "){
+			tempMove = sideOrder[4];//= L
+			sideOrder[4] = sideOrder[3];//L = F
+			sideOrder[3] = sideOrder[2];//F = R
+			sideOrder[2] = sideOrder[1];//R = B
+			sideOrder[1] = tempMove;//B = L
+		}
+		else if(rotationText == "y2 "){
+			reassignFaceLetters("y ");
+			reassignFaceLetters("y ");
+		}
+		else if(rotationText == "y' "){
+			reassignFaceLetters("y ");
+			reassignFaceLetters("y ");
+			reassignFaceLetters("y ");
+		}
+		else if(rotationText == "z "){
+			// tempMove = sideOrder[0];//= U
+			// sideOrder[0] = sideOrder[1];//U = L
+			// sideOrder[1] = sideOrder[5];//L = D
+			// sideOrder[5] = sideOrder[3];//D = R
+			// sideOrder[3] = tempMove;//R = U
+
+			tempMove = sideOrder[3];//= U
+			sideOrder[3] = sideOrder[5];//U = L
+			sideOrder[5] = sideOrder[1];//L = D
+			sideOrder[1] = sideOrder[0];//D = R
+			sideOrder[0] = tempMove;//R = U
+		}
+		else if(rotationText == "z2 "){
+			reassignFaceLetters("z ");
+			reassignFaceLetters("z ");
+		}
+		else if(rotationText == "z' "){
+			reassignFaceLetters("z ");
+			reassignFaceLetters("z ");
+			reassignFaceLetters("z ");
+		}
+		else if(rotationText == "x "){
+			// tempMove = sideOrder[0];//= U
+			// sideOrder[0] = sideOrder[2];//U = F
+			// sideOrder[2] = sideOrder[5];//F = D
+			// sideOrder[5] = sideOrder[4];//D = B
+			// sideOrder[4] = tempMove;//B = U
+
+			tempMove = sideOrder[4];//= U
+			sideOrder[4] = sideOrder[5];//U = F
+			sideOrder[5] = sideOrder[2];//F = D
+			sideOrder[2] = sideOrder[0];//D = B
+			sideOrder[0] = tempMove;//B = U
+		}
+		else if(rotationText == "x2 "){
+			reassignFaceLetters("x ");
+			reassignFaceLetters("x ");
+		}
+		else if(rotationText == "x' "){
+			reassignFaceLetters("x ");
+			reassignFaceLetters("x ");
+			reassignFaceLetters("x ");
+
+
+		}
+		else if(rotationText == "x z "){
+			reassignFaceLetters("x ");
+			reassignFaceLetters("z ");
+		}
+		else if(rotationText == "y2 z' "){
+			reassignFaceLetters("y' ");
+			reassignFaceLetters("z' ");
+		}
+		else if(rotationText == "x' z "){
+			reassignFaceLetters("x' ");
+			reassignFaceLetters("z ");
+		}
+		else if(rotationText == "y z "){
+			reassignFaceLetters("y ");
+			reassignFaceLetters("z ");
+		}
+		else if(rotationText == "y' z' "){
+			reassignFaceLetters("y' ");
+			reassignFaceLetters("z' ");
+		}
+		else if(rotationText == "x' z2 "){
+			reassignFaceLetters("x' ");
+			reassignFaceLetters("z2 ");
+		}
+		else if(rotationText == "x z' "){
+			reassignFaceLetters("x ");
+			reassignFaceLetters("z' ");
+		}
+		else if(rotationText == "y2 z "){
+			reassignFaceLetters("y2 ");
+			reassignFaceLetters("z ");
+		}
+		else if(rotationText == "x' z' "){
+			reassignFaceLetters("x' ");
+			reassignFaceLetters("z' ");
+		}
+		else if(rotationText == "x z2 "){
+			reassignFaceLetters("x ");
+			reassignFaceLetters("z2 ");
+
+		}
+		else if(rotationText == "y z' "){
+			reassignFaceLetters("y ");
+			reassignFaceLetters("z' ");
+		}
+		else if(rotationText == "y' z "){
+			reassignFaceLetters("y' ");
+			reassignFaceLetters("z ");
+		}
+		else if(rotationText == "y z2 "){
+			reassignFaceLetters("y ");
+			reassignFaceLetters("z2 ");
+		}
+		else if(rotationText == "y' z2 "){
+			reassignFaceLetters("y' ");
+			reassignFaceLetters("z2 ");
+		}
+
+	}
+
+	string printCubeRotations(Quaternion poop){
 		Quaternion closestRotationToCubeRotation = nearestCubeRotation(cubeRotation);
-		Quaternion closestRotationToPrevCubeRotation = nearestCubeRotation(prevCubeRotation);
+
 		Quaternion relativeRotation =
-		closestRotationToPrevCubeRotation * Quaternion.Inverse(closestRotationToCubeRotation);
+		poop * Quaternion.Inverse(closestRotationToCubeRotation);
+		//closestRotationToPrevCubeRotation * Quaternion.Inverse(closestRotationToCubeRotation);
 
 			string rotationText = "";
 			float closestDistance = Quaternion.Angle(relativeRotation, cubeRotationTable[0]);
+
 			rotationText = cubeRotationText[0];
-			//for (int i = 1; i < cubeRotationTable.Length; i++){
 			for (int i = 1; i < cubeRotationText.Length; i++){
 				float distance = Quaternion.Angle(relativeRotation, cubeRotationTable[i]);
 				if (distance < closestDistance){
-				//if (closestRelativeRotation == cubeRotationTable[i]){
 					closestDistance = distance;
 					rotationText = cubeRotationText[i];
-					//tester = cubeRotationText[i];
-					//moves += cubeRotationText[i];
+
 				}
 			}
-			return rotationText;
 
+			closestRotationToPrevCubeRotation = closestRotationToCubeRotation;
+			reassignFaceLetters(rotationText);
+			return rotationText;
 
 	}
 
