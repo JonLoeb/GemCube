@@ -25,6 +25,7 @@ public class CalibrateController : MonoBehaviour{
   Quaternion[] superSpin = new Quaternion[6];
   Quaternion[] currentState = new Quaternion[gemCount];
   Quaternion[] stabalizer = new Quaternion[gemCount];
+  Quaternion[] azimuth = new Quaternion[gemCount];
   Quaternion cubeRotation = Quaternion.identity;
   Quaternion[] rotationData = new Quaternion[12];
 
@@ -287,6 +288,33 @@ public class CalibrateController : MonoBehaviour{
     new Quaternion(-0.314f, 0.843f, 0.415f, 0.140f)
   };
 
+  private static readonly Quaternion[] cubeRotationTable = {
+    Quaternion.LookRotation(Vector3.forward, Vector3.up),//This is equal to Quaternion.identity
+    Quaternion.LookRotation(Vector3.left, Vector3.up), //y'
+    Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
+    Quaternion.LookRotation(Vector3.right, Vector3.up),//y
+    Quaternion.LookRotation(Vector3.forward, Vector3.left),//z'
+    Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
+    Quaternion.LookRotation(Vector3.forward, Vector3.right),//z
+    Quaternion.LookRotation(Vector3.up, Vector3.back),//x'
+    Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
+    Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
+    Quaternion.LookRotation(Vector3.up, Vector3.left),//z' x'
+    Quaternion.LookRotation(Vector3.back, Vector3.left),//z y2
+    Quaternion.LookRotation(Vector3.down, Vector3.left),//z' x'
+    Quaternion.LookRotation(Vector3.left, Vector3.back),//z' y'
+    Quaternion.LookRotation(Vector3.right, Vector3.back),//z y
+    Quaternion.LookRotation(Vector3.down, Vector3.back),//z2 x
+    Quaternion.LookRotation(Vector3.up, Vector3.right),//z x'
+    Quaternion.LookRotation(Vector3.back, Vector3.right),//z' y2
+    Quaternion.LookRotation(Vector3.down, Vector3.right),//z x
+    Quaternion.LookRotation(Vector3.up, Vector3.forward),//z2 x'
+    Quaternion.LookRotation(Vector3.left, Vector3.forward),//z y'
+    Quaternion.LookRotation(Vector3.right, Vector3.forward),//z' y
+    Quaternion.LookRotation(Vector3.left, Vector3.down),//z2 y'
+    Quaternion.LookRotation(Vector3.right, Vector3.down)//z2 y
+  };
+
 
 
 
@@ -298,15 +326,17 @@ public class CalibrateController : MonoBehaviour{
     //To get gem by number instead of address, on Android the Gem should be paired to Gem SDK Utility app
     //gem = GemManager.Instance.GetGem(0);
 
-    gem[0] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:DD");//white
+    gem[3] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:DD");//white
     gem[1] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:E6");//orange
     gem[2] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:3A");//green
-    gem[3] =  GemManager.Instance.GetGem("D0:B5:C2:90:78:E4");//red
+    gem[0] =  GemManager.Instance.GetGem("D0:B5:C2:90:78:E4");//red
     gem[4] =  GemManager.Instance.GetGem("D0:B5:C2:90:7C:4D");//blue
     gem[5] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:6D");//yellow
 
     for (int i = 0; i < gemCount; i++){
       stabalizer[i] = Quaternion.identity;
+      azimuth[i] = Quaternion.identity;
+
     }
 
     axis[0] = Vector3.up;//U
@@ -326,11 +356,16 @@ public class CalibrateController : MonoBehaviour{
 
 
     sideOrientation[0] = Quaternion.identity;
-    sideOrientation[1] = Quaternion.AngleAxis(90, axisNorm[1]);
-    sideOrientation[2] = Quaternion.AngleAxis(90, axisNorm[2]);
-    sideOrientation[3] = Quaternion.AngleAxis(90, axisNorm[3]);
-    sideOrientation[4] = Quaternion.AngleAxis(90, axisNorm[4]);
-    sideOrientation[5] = Quaternion.AngleAxis(180, axisNorm[5]);
+    // sideOrientation[1] = Quaternion.AngleAxis(90, axisNorm[1]);
+    // sideOrientation[2] = Quaternion.AngleAxis(90, axisNorm[2]);
+    // sideOrientation[3] = Quaternion.AngleAxis(90, axisNorm[3]);
+    // sideOrientation[4] = Quaternion.AngleAxis(90, axisNorm[4]);
+    // sideOrientation[5] = Quaternion.AngleAxis(180, axisNorm[5]);
+    sideOrientation[1] = Quaternion.identity;
+    sideOrientation[2] = Quaternion.identity;
+    sideOrientation[3] = Quaternion.identity;
+    sideOrientation[4] = Quaternion.identity;
+    sideOrientation[5] = Quaternion.identity;
 
     for (int i = 0; i < 6; i++){
       superSpin[i] = Quaternion.identity;
@@ -355,22 +390,30 @@ public class CalibrateController : MonoBehaviour{
       }
 
       if (Input.GetMouseButton(0)){
+
+
         //calibrate gems
         for (int i = 0; i < gemCount; i++){
-        //  gem[i].CalibrateAzimuth();
+          gem[i].CalibrateAzimuth();
+
+          //Use instead of CalibrateAzimuth() to calibrate also tilt and elevation
+          //gem[i].CalibrateOrigin();
+
+          calculateSideOrientation(i);
+          //calculateStabalizer(i);
+          //calculateAzimuth(i);
+
         }
-        //Use instead of CalibrateAzimuth() to calibrate also tilt and elevation
-        //gem.CalibrateOrigin();
 
         cubeRotation = Quaternion.identity;
-        calculateStabalizers();
       }
 
       for (int i = 0; i < gemCount; i++){
         //currentState[i] = gem[i].Rotation;
-        currentState[i] = gem[i].Rotation * sideOrientation[i];
+        //currentState[i] = gem[i].Rotation * sideOrientation[i];
+        currentState[i] = getSideRotation(i);
+        //stabalizeGem(i);
       }
-      stabalizeGems();
       getCubeRotation();
       //matchStateToCube();
 
@@ -399,14 +442,17 @@ public class CalibrateController : MonoBehaviour{
         Quaternion q = currentState[i] * Quaternion.Inverse(cubeRotation);
 
 
-        if (firstAngleMethod){
-          angle[i] = Quaternion.Angle(cubeRotation, currentState[i]);
-          angle[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
-        }
-        else{
-          angle[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
-          angle[i] *= -angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
-        }
+        // if (firstAngleMethod){
+        //   angle[i] = Quaternion.Angle(cubeRotation, currentState[i]);
+        //   angle[i] *= angleSign(cubeRotation * axisNorm[i],currentState[i] * axisNorm[i],cubeRotation * axis[i]);
+        // }
+        // else{
+        //   angle[i] = Vector3.Angle(q * axisNorm[i], axisNorm[i]);
+        //   angle[i] *= -angleSign(q * axisNorm[i], axisNorm[i], axis[i]);
+        // }
+        angle[i] = AngleSigned(cubeRotation * axisNorm[i], currentState[i] * axisNorm[i], cubeRotation * axis[i]);
+
+
         angle[i] = (angle[i] + 360) % 360;
 
         //turn this off when getting bug data
@@ -414,6 +460,26 @@ public class CalibrateController : MonoBehaviour{
         //angle[i] = (angle[i] + 360) % 360;
     }
   }
+
+  int nearestCubeRotationIndex(Quaternion rotation){
+    int index = 0;
+    float closestDistance = Quaternion.Angle(rotation, cubeRotationTable[0]);
+
+    for (int i = 1; i < cubeRotationTable.Length; i++){
+      float distance = Quaternion.Angle(rotation, cubeRotationTable[i]);
+      if (distance < closestDistance){
+        closestDistance = distance;
+        index = i;
+      }
+    }
+    return index;
+  }
+
+  float AngleSigned(Vector3 v1, Vector3 v2, Vector3 n){
+    return Mathf.Atan2(
+        Vector3.Dot(n, Vector3.Cross(v1, v2)),
+        Vector3.Dot(v1, v2)) * Mathf.Rad2Deg;
+}
 
   void transformGems(){
     for (int i = 0; i < gemCount; i++){
@@ -442,23 +508,70 @@ public class CalibrateController : MonoBehaviour{
     return true;
   }
 
-  void calculateStabalizers(){
-    for (int i = 0; i < gemCount; i++){
-      stabalizer[i] = Quaternion.Inverse(Quaternion.LookRotation(
-      gem[i].Rotation * sideOrientation[i] * Vector3.forward,
-      gem[i].Rotation * sideOrientation[i] * Vector3.up));
-      //gem[i].Rotation * Vector3.forward,
-      //gem[i].Rotation * Vector3.up));
-    }
-
-
+  void calculateSideOrientation(int i){
+    sideOrientation[i] = Quaternion.Inverse(cubeRotationTable[nearestCubeRotationIndex(gem[i].Rotation)]);
+    stabalizer[i] = Quaternion.Inverse(sideOrientation[i]) * Quaternion.Inverse(gem[i].Rotation);
+      //stabalizer[i] = Quaternion.Inverse(gem[i].Rotation);
 
   }
 
-  void stabalizeGems(){
-    for (int i = 0; i < gemCount; i++){
-      currentState[i] =  stabalizer[i] * currentState[i];
+  Quaternion getSideRotation(int i){
+    //return  gem[i].Rotation * stabalizer[i];
+
+    return  stabalizer[i] * gem[i].Rotation * sideOrientation[i];
+  }
+
+  void calculateStabalizer(int i){
+      stabalizer[i] = Quaternion.Inverse(Quaternion.LookRotation(
+      gem[i].Rotation * sideOrientation[i] * Vector3.forward,
+      gem[i].Rotation * sideOrientation[i] * Vector3.up));
+
+      stabalizer[i] = Quaternion.Inverse(gem[i].Rotation);
+
+      stabalizer[i] = Quaternion.Inverse(sideOrientation[i]) * Quaternion.Inverse(gem[i].Rotation) ;
+
+
+        //stabalizer[i] = Quaternion.identity;
+  }
+
+  void calculateAzimuth(int i){
+      azimuth[i] = Quaternion.AngleAxis( -GetAzimuth(gem[i].Rotation), Vector3.up);
+  }
+
+  float GetAzimuth(Quaternion quat)
+  {
+    Vector3 forward = quat * new Vector3(0f, 0f, 1f);
+    Vector3 right = quat * new Vector3(1f, 0f, 0f);
+
+    float forwProj = Mathf.Sqrt(forward.x * forward.x + forward.z * forward.z);
+    float rightProj = Mathf.Sqrt(right.x * right.x + right.z * right.z);
+
+    float angle;
+
+    if (forwProj >= rightProj)
+    {
+      angle = Mathf.Acos(forward.z / forwProj);
+
     }
+    else
+    {
+      angle = Mathf.Acos(right.x / rightProj);
+    }
+
+    if (forward.x < 0)
+      angle = 2f * (float)Mathf.PI - angle;
+
+    angle *= 180f / Mathf.PI;
+
+    return angle;
+  }
+
+
+  void stabalizeGem(int i){
+        //currentState[i] =  stabalizer[i] * currentState[i];//Tomer's Calibrate
+      currentState[i] =  currentState[i] * stabalizer[i];//My Calibrate
+
+      //calculateAzimuth(i);
   }
 
   void matchStateToCube(){

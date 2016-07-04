@@ -158,6 +158,10 @@ public class CubeLogic : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 		if(gemsAreNotNull()){
+			if (Input.GetKeyDown(KeyCode.Space)){
+				moves = "";
+			}
+
 			if (Input.GetMouseButton(0)){
 				resetAll();
 			}
@@ -191,6 +195,12 @@ public class CubeLogic : MonoBehaviour {
 		sideOrientation[3] = Quaternion.AngleAxis(90, axisNorm[3]);
 		sideOrientation[4] = Quaternion.AngleAxis(90, axisNorm[4]);
 		sideOrientation[5] = Quaternion.AngleAxis(180, axisNorm[5]);
+		// sideOrientation[1] = Quaternion.identity;
+		// sideOrientation[2] = Quaternion.identity;
+		// sideOrientation[3] = Quaternion.identity;
+		// sideOrientation[4] = Quaternion.identity;
+		// sideOrientation[5] = Quaternion.identity;
+
 
 		//resetCenters();
 		//resetCorners();
@@ -212,16 +222,16 @@ public class CubeLogic : MonoBehaviour {
 		for (int i = 0; i < gemCount; i++){
 
 			gem[i].CalibrateAzimuth();
+			calculateStabalizer(i);
 			faceRotation[i] = gem[i].Rotation * sideOrientation[i];
-
+			stabalizeGem(i);
 
 			prevAngleCounter[i] = 0;
 			angleCounter[i] = 0;
 			spinFixer[i] = 0;
 
 		}
-		calculateStabalizers();
-		stabalizeGems();
+		//calculateStabalizers();
 
 		cubeRotation = Quaternion.identity;
 		rotateCube(true);
@@ -236,8 +246,8 @@ public class CubeLogic : MonoBehaviour {
 		if(!reset){
 			for (int i = 0; i < gemCount; i++){
 				faceRotation[i] = gem[i].Rotation * sideOrientation[i];
+				stabalizeGem(i);
 			}
-			stabalizeGems();
 
 		}
 		Quaternion prevCubeRotation = cubeRotation;
@@ -285,7 +295,7 @@ public class CubeLogic : MonoBehaviour {
 		Transform[] animateUs = getLayer(i);
 		float angle = angleCounter[i] + spinFixer[i];
 		//float range = 6 + (20 * (Quaternion.Angle(Quaternion.identity, cubeRotation)/180));
-		if(ignoreUpdate(angleCounter[i], 24)){
+		if(ignoreUpdate(angleCounter[i], 30)){
 			angle = (angle + 360) % 360;
 
 
@@ -840,8 +850,26 @@ public class CubeLogic : MonoBehaviour {
 					angleCounter[sideIndex] = angle;
 				}
 
+				//angleCounter[sideIndex] = getDampedAngle(angleCounter[sideIndex], 5.0f, 0.001f);
+
+				angleCounter[sideIndex] = (angleCounter[sideIndex] + 360f) % 360f;
+
 
 		}
+	}
+
+	float getDampedAngle(float angle, float minPower, float maxPower){
+		float roundedAngle = Mathf.Round( angle/90f  )*90f;
+		roundedAngle = (roundedAngle + 360f) % 360f;
+
+		float velocity = 0.0f;
+		float scale = (Mathf.Abs(angle - roundedAngle))/45f;
+
+		//float maxPower = 0.001f;
+		//float minPower = 5.0f;
+		float power = maxPower - ((maxPower - minPower) * scale);
+
+		return Mathf.SmoothDampAngle(angle, roundedAngle, ref velocity, power);
 	}
 
 	//checks to see if the difference between two angles is greater than some threashhold (30)
@@ -1137,21 +1165,20 @@ public class CubeLogic : MonoBehaviour {
 
 	//called when gems are first receivng data,
 	//used to calculate the correction quaternion for gem data to match what would be expected
-	void calculateStabalizers(){
-		for (int i = 0; i < gemCount; i++){
+	void calculateStabalizer(int i){
 			stabalizer[i] = Quaternion.Inverse(Quaternion.LookRotation(
 			gem[i].Rotation * sideOrientation[i] * Vector3.forward,
 			gem[i].Rotation * sideOrientation[i] * Vector3.up));
 			//gem[i].Rotation * Vector3.forward,
 			//gem[i].Rotation * Vector3.up));
-		}
+
+			//stabalizer[i] = Quaternion.Inverse(gem[i].Rotation);
 	}
 
 	//uses the data calculated by calculateStabalizers() to calibrate the gems
-	void stabalizeGems(){
-		for (int i = 0; i < gemCount; i++){
-			faceRotation[i] =  stabalizer[i] * faceRotation[i];
-		}
+	void stabalizeGem(int i){
+			faceRotation[i] =  stabalizer[i] * faceRotation[i];//Tomer's way
+			//faceRotation[i] =  faceRotation[i] * stabalizer[i];//my way
 	}
 
 	//Old way of updating logic of each corner to solved state
