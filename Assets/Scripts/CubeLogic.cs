@@ -22,6 +22,10 @@ public class CubeLogic : MonoBehaviour {
 	Quaternion[] sideOrientation = new Quaternion[6];
 	Quaternion[] stabalizer = new Quaternion[gemCount];
 
+	Quaternion[] startRotationInverse = new Quaternion[gemCount];
+	Quaternion[] closestToStartRotation = new Quaternion[gemCount];
+
+
 	bool firstRun = true;
 
 	Quaternion[] cornerPermutation = new Quaternion[8];
@@ -221,10 +225,13 @@ public class CubeLogic : MonoBehaviour {
 
 		for (int i = 0; i < gemCount; i++){
 
-			gem[i].CalibrateAzimuth();
-			calculateStabalizer(i);
-			faceRotation[i] = gem[i].Rotation * sideOrientation[i];
-			stabalizeGem(i);
+			//gem[i].CalibrateAzimuth();
+			//calculateStabalizer(i);
+			//faceRotation[i] = gem[i].Rotation * sideOrientation[i];
+			//stabalizeGem(i);
+
+			calculateSideOrientation(i);
+			faceRotation[i] = getSideRotation(i);
 
 			prevAngleCounter[i] = 0;
 			angleCounter[i] = 0;
@@ -245,8 +252,10 @@ public class CubeLogic : MonoBehaviour {
 
 		if(!reset){
 			for (int i = 0; i < gemCount; i++){
-				faceRotation[i] = gem[i].Rotation * sideOrientation[i];
-				stabalizeGem(i);
+				//faceRotation[i] = gem[i].Rotation * sideOrientation[i];
+				//stabalizeGem(i);
+
+				faceRotation[i] = getSideRotation(i);
 			}
 
 		}
@@ -310,6 +319,18 @@ public class CubeLogic : MonoBehaviour {
 
 			//c.transform.RotateAround(Vector3.zero, cubeRotation * axis[i], angle);
 		}
+	}
+
+	void calculateSideOrientation(int i){
+		startRotationInverse[i] = gem[i].Rotation;
+		closestToStartRotation[i] = Quaternion.Inverse(cubeRotationTable[nearestCubeRotationIndex(startRotationInverse[i])]);
+		startRotationInverse[i] =  Quaternion.Inverse(startRotationInverse[i])  ;
+
+	}
+
+	Quaternion getSideRotation(int i){
+		//Let Gem calibrate for 5 seconds FLAT!!!!!!!!!
+		return   Quaternion.Inverse(closestToStartRotation[i]) * startRotationInverse[i] * gem[i].Rotation * closestToStartRotation[i];
 	}
 
 	//after all sides are rotated doSpin is called to update the logic of where peices are,

@@ -22,6 +22,7 @@ public class CalibrateController : MonoBehaviour{
   Vector3[] axis = new Vector3[6];
   Vector3[] axisNorm = new Vector3[6];
   Quaternion[] sideOrientation = new Quaternion[6];
+  Quaternion[] mikeOrientation = new Quaternion[6];
   Quaternion[] superSpin = new Quaternion[6];
   Quaternion[] currentState = new Quaternion[gemCount];
   Quaternion[] stabalizer = new Quaternion[gemCount];
@@ -367,6 +368,13 @@ public class CalibrateController : MonoBehaviour{
     sideOrientation[4] = Quaternion.identity;
     sideOrientation[5] = Quaternion.identity;
 
+    mikeOrientation[0] = Quaternion.identity;
+    mikeOrientation[1] = Quaternion.AngleAxis(-90, axisNorm[1]);
+    mikeOrientation[2] = Quaternion.AngleAxis(-90, axisNorm[2]);
+    mikeOrientation[3] = Quaternion.AngleAxis(-90, axisNorm[3]);
+    mikeOrientation[4] = Quaternion.AngleAxis(-90, axisNorm[4]);
+    mikeOrientation[5] = Quaternion.AngleAxis(180, axisNorm[5]);
+
     for (int i = 0; i < 6; i++){
       superSpin[i] = Quaternion.identity;
     }
@@ -394,7 +402,7 @@ public class CalibrateController : MonoBehaviour{
 
         //calibrate gems
         for (int i = 0; i < gemCount; i++){
-          gem[i].CalibrateAzimuth();
+          //gem[i].CalibrateAzimuth();
 
           //Use instead of CalibrateAzimuth() to calibrate also tilt and elevation
           //gem[i].CalibrateOrigin();
@@ -418,6 +426,7 @@ public class CalibrateController : MonoBehaviour{
       //matchStateToCube();
 
       transform.rotation = cubeRotation;
+
       transformGems();
 
       calculateAngles();
@@ -509,16 +518,27 @@ public class CalibrateController : MonoBehaviour{
   }
 
   void calculateSideOrientation(int i){
-    sideOrientation[i] = Quaternion.Inverse(cubeRotationTable[nearestCubeRotationIndex(gem[i].Rotation)]);
-    stabalizer[i] = Quaternion.Inverse(sideOrientation[i]) * Quaternion.Inverse(gem[i].Rotation);
-      //stabalizer[i] = Quaternion.Inverse(gem[i].Rotation);
+    stabalizer[i] = gem[i].Rotation;
+    sideOrientation[i] = Quaternion.Inverse(cubeRotationTable[nearestCubeRotationIndex(stabalizer[i])]);
+    stabalizer[i] =  Quaternion.Inverse(stabalizer[i])  ;
 
   }
 
   Quaternion getSideRotation(int i){
-    //return  gem[i].Rotation * stabalizer[i];
+    //return   Quaternion.Inverse(mikeOrientation[i]) * gem[i].Rotation * stabalizer[i]  ;
+    //return     mikeOrientation[i] * ( stabalizer[i] * gem[i].Rotation )  ;
 
-    return  stabalizer[i] * gem[i].Rotation * sideOrientation[i];
+    //return    gem[i].Rotation * sideOrientation[i];
+    return   Quaternion.Inverse(sideOrientation[i]) * stabalizer[i] * gem[i].Rotation * sideOrientation[i];
+    //return  sideOrientation[i] * stabalizer[i] * gem[i].Rotation *  Quaternion.Inverse(sideOrientation[i]);
+
+    //return gem[i].Rotation *  sideOrientation[i] ;
+
+    //gemRotation.y *= -1;
+
+    //return  stabalizer[i] * gem[i].Rotation * sideOrientation[i];
+    //return  gem[i].Rotation * stabalizer[i] * sideOrientation[i];
+
   }
 
   void calculateStabalizer(int i){
