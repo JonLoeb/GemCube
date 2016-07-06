@@ -10,7 +10,54 @@ public class CubeLogic : MonoBehaviour {
 	const int gemCount = 6;
 	IGem[] gem = new IGem[6];
 
+	public Text rotationText;
+	public GameObject[] gems = new GameObject[6];
+
+
+
 	enum TurnDirection {Clockwise, CounterClockwise, NoTurn};
+	Quaternion[] startRotation = new Quaternion[gemCount];
+
+	private static readonly Quaternion[,] sideOrientationTable = {
+		{//up
+			Quaternion.LookRotation(Vector3.forward, Vector3.up),//This is equal to Quaternion.identity
+			Quaternion.LookRotation(Vector3.left, Vector3.up), //y'
+			Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
+			Quaternion.LookRotation(Vector3.right, Vector3.up)//y
+		},
+		{//left
+			Quaternion.LookRotation(Vector3.forward, Vector3.left),//z'
+			Quaternion.LookRotation(Vector3.up, Vector3.left),//z' x'
+			Quaternion.LookRotation(Vector3.back, Vector3.left),//z y2
+			Quaternion.LookRotation(Vector3.down, Vector3.left)//z' x
+		},
+		{//front
+			Quaternion.LookRotation(Vector3.up, Vector3.back),//x'
+			Quaternion.LookRotation(Vector3.right, Vector3.back),//z y
+			Quaternion.LookRotation(Vector3.left, Vector3.back),//z' y'
+			Quaternion.LookRotation(Vector3.down, Vector3.back)//z2 x
+		},
+		{//right
+			Quaternion.LookRotation(Vector3.forward, Vector3.right),//z
+			Quaternion.LookRotation(Vector3.down, Vector3.right),//z x
+			Quaternion.LookRotation(Vector3.up, Vector3.right),//z x'
+			Quaternion.LookRotation(Vector3.back, Vector3.right)//z' y2
+		},
+		{//back
+			Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
+			Quaternion.LookRotation(Vector3.right, Vector3.forward),//z' y
+			Quaternion.LookRotation(Vector3.left, Vector3.forward),//z y'
+			Quaternion.LookRotation(Vector3.up, Vector3.forward)//z2 x'
+		},
+		{//down
+			Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
+			Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
+			Quaternion.LookRotation(Vector3.left, Vector3.down),//z2 y'
+			Quaternion.LookRotation(Vector3.right, Vector3.down)//z2 y
+		}
+};
+
+
 
 	Quaternion[] faceRotation = new Quaternion[gemCount];
 
@@ -31,6 +78,10 @@ public class CubeLogic : MonoBehaviour {
 	Quaternion[] cornerPermutation = new Quaternion[8];
 	Quaternion[] edgePermutation  = new Quaternion[12];
 	Quaternion[] centerPermutation  = new Quaternion[6];
+	public bool calibrateX = false;
+	public bool calibrateY = false;
+	public bool calibrateZ = false;
+	public bool masterAllower = false;
 
 
 
@@ -47,13 +98,13 @@ public class CubeLogic : MonoBehaviour {
 		Quaternion.LookRotation(Vector3.forward, Vector3.up),//This is equal to Quaternion.identity
 		Quaternion.LookRotation(Vector3.left, Vector3.up), //y'
 		Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
-			Quaternion.LookRotation(Vector3.right, Vector3.up),//y
+		Quaternion.LookRotation(Vector3.right, Vector3.up),//y
 		Quaternion.LookRotation(Vector3.forward, Vector3.left),//z'
 		Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
-			Quaternion.LookRotation(Vector3.forward, Vector3.right),//z
+		Quaternion.LookRotation(Vector3.forward, Vector3.right),//z
 		Quaternion.LookRotation(Vector3.up, Vector3.back),//x'
 		Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
-			Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
+		Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
 		Quaternion.LookRotation(Vector3.up, Vector3.left),//z' x'
 		Quaternion.LookRotation(Vector3.back, Vector3.left),//z y2
 		Quaternion.LookRotation(Vector3.down, Vector3.left),//z' x'
@@ -164,14 +215,49 @@ public class CubeLogic : MonoBehaviour {
 		if(gemsAreNotNull()){
 			if (Input.GetKeyDown(KeyCode.Space)){
 				moves = "";
+				masterAllower = true;
 			}
 
 			if (Input.GetMouseButton(0)){
 				resetAll();
+				calibrateX = false;
+				calibrateY = false;
+				calibrateZ = false;
+				masterAllower = false;
+
+			}
+
+			if (Input.GetKeyDown(KeyCode.I)){
+				for (int i = 0; i < gemCount; i++){
+					rotationText.text = "";
+					updateCalibration(i, Quaternion.identity, Vector3.up, Vector3.forward);
+				}
+			}
+			if (Input.GetKeyDown(KeyCode.X)){
+				for (int i = 0; i < gemCount; i++){
+					rotationText.text = "X";
+					updateCalibration(i, Quaternion.LookRotation(Vector3.down, Vector3.forward), Vector3.right, Vector3.up);
+				}
+				calibrateX = true;
+			}
+			if (Input.GetKeyDown(KeyCode.Y)){
+				for (int i = 0; i < gemCount; i++){
+					rotationText.text = "Y";
+					updateCalibration(i, Quaternion.LookRotation(Vector3.right, Vector3.up), Vector3.up, Vector3.left);
+				}
+				calibrateY = true;
+			}
+			if (Input.GetKeyDown(KeyCode.Z)){
+				for (int i = 0; i < gemCount; i++){
+					rotationText.text = "Z";
+					updateCalibration(i, Quaternion.LookRotation(Vector3.forward, Vector3.right), Vector3.forward, Vector3.left);
+				}
+				calibrateZ = true;
 			}
 			else {
 
 				rotateCube(false);
+
 				moves = useSlices(moves);
 				//moves = useWideTurns(moves);
 				stateText.text = moves;
@@ -193,17 +279,20 @@ public class CubeLogic : MonoBehaviour {
 		firstRun = true;
 
 
+
+
 		sideOrientation[0] = Quaternion.identity;
-		sideOrientation[1] = Quaternion.AngleAxis(90, axisNorm[1]);
-		sideOrientation[2] = Quaternion.AngleAxis(90, axisNorm[2]);
-		sideOrientation[3] = Quaternion.AngleAxis(90, axisNorm[3]);
-		sideOrientation[4] = Quaternion.AngleAxis(90, axisNorm[4]);
-		sideOrientation[5] = Quaternion.AngleAxis(180, axisNorm[5]);
-		// sideOrientation[1] = Quaternion.identity;
-		// sideOrientation[2] = Quaternion.identity;
-		// sideOrientation[3] = Quaternion.identity;
-		// sideOrientation[4] = Quaternion.identity;
-		// sideOrientation[5] = Quaternion.identity;
+		// sideOrientation[1] = Quaternion.AngleAxis(90, axisNorm[1]);
+		// sideOrientation[2] = Quaternion.AngleAxis(90, axisNorm[2]);
+		// sideOrientation[3] = Quaternion.AngleAxis(90, axisNorm[3]);
+		// sideOrientation[4] = Quaternion.AngleAxis(90, axisNorm[4]);
+		// sideOrientation[5] = Quaternion.AngleAxis(180, axisNorm[5]);
+
+		sideOrientation[1] = Quaternion.identity;
+		sideOrientation[2] = Quaternion.identity;
+		sideOrientation[3] = Quaternion.identity;
+		sideOrientation[4] = Quaternion.identity;
+		sideOrientation[5] = Quaternion.identity;
 
 
 		//resetCenters();
@@ -225,13 +314,15 @@ public class CubeLogic : MonoBehaviour {
 
 		for (int i = 0; i < gemCount; i++){
 
-			gem[i].CalibrateAzimuth();
-			calculateStabalizer(i);
-			faceRotation[i] = gem[i].Rotation * sideOrientation[i];
-			stabalizeGem(i);
+			// gem[i].CalibrateAzimuth();
+			// calculateStabalizer(i);
+			// faceRotation[i] = gem[i].Rotation * sideOrientation[i];
+			// stabalizeGem(i);
 
-			//calculateSideOrientation(i);
-			//faceRotation[i] = getSideRotation(i);
+			//startRotation[i] = Quaternion.identity;
+			calculateSideOrientation(i);
+
+			faceRotation[i] = getSideRotation(i);
 
 			prevAngleCounter[i] = 0;
 			angleCounter[i] = 0;
@@ -250,12 +341,25 @@ public class CubeLogic : MonoBehaviour {
 	void rotateCube (bool reset){
 		//cubeRotation = Quaternion.identity;
 
+	//if(!((calibrateX && calibrateY) || (calibrateX && calibrateZ) || (calibrateY && calibrateZ))){
+	if(!(calibrateX && calibrateY && calibrateZ && masterAllower)){
+		if(gem[0].State == GemState.Connected){
+			//transform.rotation = gem[0].Rotation;
+		}
+			for(int i = 0; i < gemCount; i++){
+				faceRotation[i] = getSideRotation(i);
+			}
+			transformGems();
+			return;
+		}
+		//transform.rotation = cubeRotation;
 		if(!reset){
 			for (int i = 0; i < gemCount; i++){
-				faceRotation[i] = gem[i].Rotation * sideOrientation[i];
-				stabalizeGem(i);
+				// faceRotation[i] = gem[i].Rotation * sideOrientation[i];
+				// stabalizeGem(i);
 
-				//faceRotation[i] = getSideRotation(i);
+				faceRotation[i] = getSideRotation(i);
+				transformGems();
 			}
 
 		}
@@ -322,15 +426,34 @@ public class CubeLogic : MonoBehaviour {
 	}
 
 	void calculateSideOrientation(int i){
-		startRotationInverse[i] = gem[i].Rotation;
-		closestToStartRotation[i] = Quaternion.Inverse(cubeRotationTable[nearestCubeRotationIndex(startRotationInverse[i])]);
-		startRotationInverse[i] =  Quaternion.Inverse(startRotationInverse[i])  ;
+		startRotation[i] = gem[i].Rotation;
+		//sideOrientation[i] = Quaternion.Inverse(cubeRotationTable[nearestCubeRotationIndex(startRotation[i])]);
+
+
+		Quaternion q = sideOrientationTable[i,0];
+		float closestDistance = Quaternion.Angle(startRotation[i], sideOrientationTable[i,0]);
+
+		for (int j = 1; j < 4; j++){
+			float distance = Quaternion.Angle(startRotation[i], sideOrientationTable[i,j]);
+			if (distance < closestDistance){
+				closestDistance = distance;
+				q = sideOrientationTable[i,j];
+			}
+		}
+
+		sideOrientation[i] = Quaternion.Inverse(q);
+
+		startRotation[i] =  Quaternion.Inverse(startRotation[i])  ;
 
 	}
 
+
 	Quaternion getSideRotation(int i){
-		//Let Gem calibrate for 5 seconds FLAT!!!!!!!!!
-		return   Quaternion.Inverse(closestToStartRotation[i]) * startRotationInverse[i] * gem[i].Rotation * closestToStartRotation[i];
+
+		return   Quaternion.Inverse(sideOrientation[i]) * startRotation[i] * gem[i].Rotation * sideOrientation[i];
+		//return   Quaternion.Inverse(sideOrientation[i]) * startRotation[i] * gem[i].Rotation;
+
+
 	}
 
 	//after all sides are rotated doSpin is called to update the logic of where peices are,
@@ -834,8 +957,30 @@ public class CubeLogic : MonoBehaviour {
 		Quaternion q = faceRotation[i] * Quaternion.FromToRotation(faceRotation[i] * axis[i], cubeRotation * axis[i]);
 		//Quaternion q =  Quaternion.FromToRotation(faceRotation[i] * axis[i], cubeRotation * axis[i]) * faceRotation[i];
 
-			faceRotation[i] = q;
+		faceRotation[i] = q;
 		//faceRotation[i] = Quaternion.Slerp(faceRotation[i], q, 0.5f);
+	}
+
+	void updateCalibration(int i, Quaternion expectedRotation, Vector3 rotationAxis, Vector3 normalAxis){
+		Quaternion currentRotation = cubeRotationTable[ nearestCubeRotationIndex(faceRotation[i]) ];
+
+		float angleDistance = AngleSigned(currentRotation * normalAxis, expectedRotation * normalAxis, rotationAxis);
+		angleDistance = (angleDistance + 360f) % 360f;
+
+		if(angleDistance > 10){
+			if(angleDistance < 100){
+				sideOrientation[i] = Quaternion.LookRotation(Vector3.left, Vector3.up) * sideOrientation[i];
+			}
+			else if(angleDistance > 260){
+				sideOrientation[i] = Quaternion.LookRotation(Vector3.right, Vector3.up) * sideOrientation[i];
+			}
+			else{
+				sideOrientation[i] = Quaternion.LookRotation(Vector3.back, Vector3.up) * sideOrientation[i];
+			}
+		}
+
+
+
 	}
 
 	//sets angleCounter[i] = to the angle that the side is rotated with respect to the core of the cube
@@ -859,21 +1004,21 @@ public class CubeLogic : MonoBehaviour {
 			//angleCounter[sideIndex] -= bugFixAngle(sideIndex);
 			//angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
 
-				//angleCounter[sideIndex] = closestToLastAngle(angle, angleCounter[sideIndex]);
+			//angleCounter[sideIndex] = closestToLastAngle(angle, angleCounter[sideIndex]);
 
-				// if(angleSignChanged(angle, angleCounter[sideIndex])){
-				// 	angleCounter[sideIndex] = 360 - angleCounter[sideIndex];
-				// 	angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
-				// }
+			// if(angleSignChanged(angle, angleCounter[sideIndex])){
+			// 	angleCounter[sideIndex] = 360 - angleCounter[sideIndex];
+			// 	angleCounter[sideIndex] = (angleCounter[sideIndex] + 360) % 360;
+			// }
 
-				//check for jump in angle
-				if(angleIsTooBig(angle, angleCounter[sideIndex])){
-					angleCounter[sideIndex] = angle;
-				}
+			//check for jump in angle
+			if(angleIsTooBig(angle, angleCounter[sideIndex])){
+				angleCounter[sideIndex] = angle;
+			}
 
-				//angleCounter[sideIndex] = getDampedAngle(angleCounter[sideIndex], 5.0f, 0.001f);
+			//angleCounter[sideIndex] = getDampedAngle(angleCounter[sideIndex], 5.0f, 0.001f);
 
-				angleCounter[sideIndex] = (angleCounter[sideIndex] + 360f) % 360f;
+			angleCounter[sideIndex] = (angleCounter[sideIndex] + 360f) % 360f;
 
 
 		}
@@ -1169,10 +1314,10 @@ public class CubeLogic : MonoBehaviour {
 	}
 
 	float AngleSigned(Vector3 v1, Vector3 v2, Vector3 n){
-    return Mathf.Atan2(
-        Vector3.Dot(n, Vector3.Cross(v1, v2)),
-        Vector3.Dot(v1, v2)) * Mathf.Rad2Deg;
-}
+		return Mathf.Atan2(
+		Vector3.Dot(n, Vector3.Cross(v1, v2)),
+		Vector3.Dot(v1, v2)) * Mathf.Rad2Deg;
+	}
 
 	//returns -1 or 1 based off the direction v2 is rotated from v1 with respect to normalVector
 	int angleSign (Vector3 v1, Vector3 v2, Vector3 normalVector){
@@ -1184,22 +1329,28 @@ public class CubeLogic : MonoBehaviour {
 		return -1;
 	}
 
+	void transformGems(){
+		for (int i = 0; i < gemCount; i++){
+			gems[i].transform.rotation = faceRotation[i];
+		}
+	}
+
 	//called when gems are first receivng data,
 	//used to calculate the correction quaternion for gem data to match what would be expected
 	void calculateStabalizer(int i){
-			stabalizer[i] = Quaternion.Inverse(Quaternion.LookRotation(
-			gem[i].Rotation * sideOrientation[i] * Vector3.forward,
-			gem[i].Rotation * sideOrientation[i] * Vector3.up));
-			//gem[i].Rotation * Vector3.forward,
-			//gem[i].Rotation * Vector3.up));
+		stabalizer[i] = Quaternion.Inverse(Quaternion.LookRotation(
+		gem[i].Rotation * sideOrientation[i] * Vector3.forward,
+		gem[i].Rotation * sideOrientation[i] * Vector3.up));
+		//gem[i].Rotation * Vector3.forward,
+		//gem[i].Rotation * Vector3.up));
 
-			//stabalizer[i] = Quaternion.Inverse(gem[i].Rotation);
+		//stabalizer[i] = Quaternion.Inverse(gem[i].Rotation);
 	}
 
 	//uses the data calculated by calculateStabalizers() to calibrate the gems
 	void stabalizeGem(int i){
-			faceRotation[i] =  stabalizer[i] * faceRotation[i];//Tomer's way
-			//faceRotation[i] =  faceRotation[i] * stabalizer[i];//my way
+		faceRotation[i] =  stabalizer[i] * faceRotation[i];//Tomer's way
+		//faceRotation[i] =  faceRotation[i] * stabalizer[i];//my way
 	}
 
 	//Old way of updating logic of each corner to solved state

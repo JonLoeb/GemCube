@@ -440,7 +440,12 @@ public class CalibrateController : MonoBehaviour{
         firstAngleMethod = !firstAngleMethod;
 
       }
-
+      if (Input.GetKeyDown(KeyCode.X)){
+        for (int i = 0; i < gemCount; i++){
+          rotationText.text = "";
+          updateCalibration(i, Quaternion.identity, Vector3.up, Vector3.forward);
+        }
+      }
       if (Input.GetKeyDown(KeyCode.X)){
         for (int i = 0; i < gemCount; i++){
           rotationText.text = "X";
@@ -456,7 +461,7 @@ public class CalibrateController : MonoBehaviour{
       if (Input.GetKeyDown(KeyCode.Z)){
         for (int i = 0; i < gemCount; i++){
           rotationText.text = "Z";
-          updateCalibration(i, Quaternion.LookRotation(Vector3.forward, Vector3.right), Vector3.back, Vector3.left);
+          updateCalibration(i, Quaternion.LookRotation(Vector3.forward, Vector3.right), Vector3.forward, Vector3.left);
         }
       }
 
@@ -641,7 +646,7 @@ public class CalibrateController : MonoBehaviour{
       startRotation[i] = Quaternion.Inverse(gem[i].Rotation);
 
       startRotation[i] = Quaternion.Inverse(sideOrientation[i]) * Quaternion.Inverse(gem[i].Rotation) ;
-      startRotation[i] = Quaternion.identity;
+
 
         //startRotation[i] = Quaternion.identity;
   }
