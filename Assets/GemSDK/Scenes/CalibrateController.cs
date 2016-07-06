@@ -621,7 +621,17 @@ public class CalibrateController : MonoBehaviour{
     Quaternion wrongY = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
     Quaternion correctY =   Quaternion.LookRotation(Vector3.right, Vector3.up);
 
-    startRotation[i] = sideOrientation[i] * correctY * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
+    float angleDistance = Quaternion.Angle(wrongY, correctY);
+    if(angleDistance > 10){
+      if(angleDistance < 100){
+        sideOrientation[i] = Quaternion.LookRotation(Vector3.right, Vector3.up) * sideOrientation[i];
+      }
+      else {
+        sideOrientation[i] = Quaternion.LookRotation(Vector3.back, Vector3.up) * sideOrientation[i];
+      }
+    }
+
+    //startRotation[i] = sideOrientation[i] * correctY * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
 
     // float angleDistance = Quaternion.Angle(wrongY, correctY);
     //
@@ -645,7 +655,17 @@ public class CalibrateController : MonoBehaviour{
     Quaternion wrongX = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
     Quaternion correctX =   Quaternion.LookRotation(Vector3.down, Vector3.forward);
 
-    startRotation[i] = sideOrientation[i] * correctX * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
+    float angleDistance = Quaternion.Angle(wrongX, correctX);
+    if(angleDistance > 10){
+      if(angleDistance < 100){
+        sideOrientation[i] = Quaternion.LookRotation(Vector3.right, Vector3.up) * sideOrientation[i];
+      }
+      else {
+        sideOrientation[i] = Quaternion.LookRotation(Vector3.back, Vector3.up) * sideOrientation[i];
+      }
+    }
+
+    //startRotation[i] = sideOrientation[i] * correctX * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
     // float angleDistance = Quaternion.Angle(wrongX, correctX);
     //
     // // if(angleDistance > 100){
@@ -670,23 +690,17 @@ public class CalibrateController : MonoBehaviour{
     rotationText.text = "Z";
     Quaternion wrongZ = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
     Quaternion correctZ =   Quaternion.LookRotation(Vector3.forward, Vector3.right);
+    float angleDistance = Quaternion.Angle(wrongZ, correctZ);
+    if(angleDistance > 10){
+      if(angleDistance < 100){
+        sideOrientation[i] = Quaternion.LookRotation(Vector3.right, Vector3.up) * sideOrientation[i];
+      }
+      else {
+        sideOrientation[i] = Quaternion.LookRotation(Vector3.back, Vector3.up) * sideOrientation[i];
+      }
+    }
 
-    startRotation[i] = sideOrientation[i] * correctZ * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
 
-    // float angleDistance = Quaternion.Angle(wrongZ, correctZ);
-    //
-    // // if(angleDistance > 100){
-    // //   sideOrientation[i].z *= -1;
-    // // }
-    // if(angleDistance > 80){
-    //   float temp = sideOrientation[i].y;
-    //   sideOrientation[i].y = sideOrientation[i].x;
-    //   sideOrientation[i].x = temp;
-    //   //sideOrientation[i].z *= -1;
-    //   //sideOrientation[i].w *= -1;
-    // }
-
-    //sideOrientation[i] =  Quaternion.Inverse(wrongZ * Quaternion.Inverse(sideOrientation[i]) * correctZ * sideOrientation[i]);
 
 
 
