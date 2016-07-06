@@ -465,7 +465,7 @@ public class CalibrateController : MonoBehaviour{
 
         //calibrate gems
         for (int i = 0; i < gemCount; i++){
-          gem[i].CalibrateAzimuth();
+          //gem[i].CalibrateAzimuth();
 
           //Use instead of CalibrateAzimuth() to calibrate also tilt and elevation
           //gem[i].CalibrateOrigin();
@@ -641,7 +641,7 @@ public class CalibrateController : MonoBehaviour{
       startRotation[i] = Quaternion.Inverse(gem[i].Rotation);
 
       startRotation[i] = Quaternion.Inverse(sideOrientation[i]) * Quaternion.Inverse(gem[i].Rotation) ;
-
+      startRotation[i] = Quaternion.identity;
 
         //startRotation[i] = Quaternion.identity;
   }
