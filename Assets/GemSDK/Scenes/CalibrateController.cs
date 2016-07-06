@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using GemSDK.Unity;
 using UnityEngine.UI;
+using System;
 
 public class CalibrateController : MonoBehaviour{
 
@@ -13,6 +14,7 @@ public class CalibrateController : MonoBehaviour{
   IGem[] gem = new IGem[6];
   float[] angle = new float[gemCount];
 
+  public Text rotationText;
   public Text stateText;
   public Text[] layerText  = new Text[6];
   public Text tableDataText;
@@ -25,10 +27,11 @@ public class CalibrateController : MonoBehaviour{
   Quaternion[] mikeOrientation = new Quaternion[6];
   Quaternion[] superSpin = new Quaternion[6];
   Quaternion[] currentState = new Quaternion[gemCount];
-  Quaternion[] stabalizer = new Quaternion[gemCount];
+  Quaternion[] startRotation = new Quaternion[gemCount];
   Quaternion[] azimuth = new Quaternion[gemCount];
   Quaternion cubeRotation = Quaternion.identity;
   Quaternion[] rotationData = new Quaternion[12];
+
 
   public GameObject ball;
   public GameObject[] gems = new GameObject[6];
@@ -302,7 +305,7 @@ public class CalibrateController : MonoBehaviour{
     Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
     Quaternion.LookRotation(Vector3.up, Vector3.left),//z' x'
     Quaternion.LookRotation(Vector3.back, Vector3.left),//z y2
-    Quaternion.LookRotation(Vector3.down, Vector3.left),//z' x'
+    Quaternion.LookRotation(Vector3.down, Vector3.left),//z' x
     Quaternion.LookRotation(Vector3.left, Vector3.back),//z' y'
     Quaternion.LookRotation(Vector3.right, Vector3.back),//z y
     Quaternion.LookRotation(Vector3.down, Vector3.back),//z2 x
@@ -315,6 +318,45 @@ public class CalibrateController : MonoBehaviour{
     Quaternion.LookRotation(Vector3.left, Vector3.down),//z2 y'
     Quaternion.LookRotation(Vector3.right, Vector3.down)//z2 y
   };
+
+  private static readonly Quaternion[,] sideOrientationTable = {
+    {//up
+      Quaternion.LookRotation(Vector3.forward, Vector3.up),//This is equal to Quaternion.identity
+      Quaternion.LookRotation(Vector3.left, Vector3.up), //y'
+      Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
+      Quaternion.LookRotation(Vector3.right, Vector3.up)//y
+    },
+    {//left
+      Quaternion.LookRotation(Vector3.forward, Vector3.left),//z'
+      Quaternion.LookRotation(Vector3.up, Vector3.left),//z' x'
+      Quaternion.LookRotation(Vector3.back, Vector3.left),//z y2
+      Quaternion.LookRotation(Vector3.down, Vector3.left)//z' x
+    },
+    {//front
+      Quaternion.LookRotation(Vector3.up, Vector3.back),//x'
+      Quaternion.LookRotation(Vector3.right, Vector3.back),//z y
+      Quaternion.LookRotation(Vector3.left, Vector3.back),//z' y'
+      Quaternion.LookRotation(Vector3.down, Vector3.back)//z2 x
+    },
+    {//right
+      Quaternion.LookRotation(Vector3.forward, Vector3.right),//z
+      Quaternion.LookRotation(Vector3.down, Vector3.right),//z x
+      Quaternion.LookRotation(Vector3.up, Vector3.right),//z x'
+      Quaternion.LookRotation(Vector3.back, Vector3.right)//z' y2
+    },
+    {//back
+      Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
+      Quaternion.LookRotation(Vector3.right, Vector3.forward),//z' y
+      Quaternion.LookRotation(Vector3.left, Vector3.forward),//z y'
+      Quaternion.LookRotation(Vector3.up, Vector3.forward)//z2 x'
+    },
+    {//down
+      Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
+      Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
+      Quaternion.LookRotation(Vector3.left, Vector3.down),//z2 y'
+      Quaternion.LookRotation(Vector3.right, Vector3.down)//z2 y
+    }
+};
 
 
 
@@ -335,7 +377,7 @@ public class CalibrateController : MonoBehaviour{
     gem[5] =  GemManager.Instance.GetGem("98:7B:F3:5A:5C:6D");//yellow
 
     for (int i = 0; i < gemCount; i++){
-      stabalizer[i] = Quaternion.identity;
+      startRotation[i] = Quaternion.identity;
       azimuth[i] = Quaternion.identity;
 
     }
@@ -354,6 +396,8 @@ public class CalibrateController : MonoBehaviour{
     axisNorm[4] = Vector3.left;//B
     axisNorm[5] = Vector3.back;//D
       //axisNorm[5] = Vector3.right;//D
+
+
 
 
     sideOrientation[0] = Quaternion.identity;
@@ -396,19 +440,38 @@ public class CalibrateController : MonoBehaviour{
         firstAngleMethod = !firstAngleMethod;
 
       }
+      if (Input.GetKeyDown(KeyCode.Space)){
+        rotationText.text = "poop";
+      }
+
+      if (Input.GetKeyDown(KeyCode.X)){
+        for (int i = 0; i < gemCount; i++){
+          updaterelativeX(i);
+        }
+      }
+      if (Input.GetKeyDown(KeyCode.Y)){
+        for (int i = 0; i < gemCount; i++){
+          updaterelativeY(i);
+        }
+      }
+      if (Input.GetKeyDown(KeyCode.Z)){
+        for (int i = 0; i < gemCount; i++){
+          updaterelativeZ(i);
+        }
+      }
 
       if (Input.GetMouseButton(0)){
 
 
         //calibrate gems
         for (int i = 0; i < gemCount; i++){
-          //gem[i].CalibrateAzimuth();
+          gem[i].CalibrateAzimuth();
 
           //Use instead of CalibrateAzimuth() to calibrate also tilt and elevation
           //gem[i].CalibrateOrigin();
 
           calculateSideOrientation(i);
-          //calculateStabalizer(i);
+          //calculateStartRotation(i);
           //calculateAzimuth(i);
 
         }
@@ -484,6 +547,21 @@ public class CalibrateController : MonoBehaviour{
     return index;
   }
 
+  int nearestSideOrientationIndex(Quaternion rotation, int gemNumber){
+    int index = 0;
+    float closestDistance = Quaternion.Angle(rotation, sideOrientationTable[gemNumber,0]);
+
+    for (int i = 1; i < 4; i++){
+      float distance = Quaternion.Angle(rotation, sideOrientationTable[gemNumber,i]);
+      if (distance < closestDistance){
+        closestDistance = distance;
+        index = i;
+      }
+    }
+    return index;
+  }
+
+
   float AngleSigned(Vector3 v1, Vector3 v2, Vector3 n){
     return Mathf.Atan2(
         Vector3.Dot(n, Vector3.Cross(v1, v2)),
@@ -517,41 +595,134 @@ public class CalibrateController : MonoBehaviour{
     return true;
   }
 
+  // Quaternion.LookRotation(Vector3.left, Vector3.up), //y'
+  // Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
+  //   Quaternion.LookRotation(Vector3.right, Vector3.up),//y
+  // Quaternion.LookRotation(Vector3.forward, Vector3.left),//z'
+  // Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
+  //   Quaternion.LookRotation(Vector3.forward, Vector3.right),//z
+  // Quaternion.LookRotation(Vector3.up, Vector3.back),//x'
+  // Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
+  //   Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
+
+
+  void updaterelativeI(int i){
+    rotationText.text = "I";
+    Quaternion wrongI = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
+
+    sideOrientation[i] = wrongI;
+    //sideOrientation[i] = relativeI * sideOrientation[i];
+
+
+
+  }
+  void updaterelativeY(int i){
+    rotationText.text = "Y";
+    Quaternion wrongY = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
+    Quaternion correctY =   Quaternion.LookRotation(Vector3.right, Vector3.up);
+
+    startRotation[i] = sideOrientation[i] * correctY * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
+
+    // float angleDistance = Quaternion.Angle(wrongY, correctY);
+    //
+    // // if(angleDistance > 100){
+    // //   sideOrientation[i].y *= -1;
+    // // }
+    // if(angleDistance > 80){
+    //   float temp = sideOrientation[i].x;
+    //   sideOrientation[i].x = sideOrientation[i].z;
+    //   sideOrientation[i].z = temp;
+    //   //sideOrientation[i].y *= -1;
+    //   //sideOrientation[i].w *= -1;
+    // }
+
+    //sideOrientation[i] =  Quaternion.Inverse(wrongY * Quaternion.Inverse(sideOrientation[i]) * correctY * sideOrientation[i]);
+
+
+  }
+  void updaterelativeX(int i){
+    rotationText.text = "X";
+    Quaternion wrongX = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
+    Quaternion correctX =   Quaternion.LookRotation(Vector3.down, Vector3.forward);
+
+    startRotation[i] = sideOrientation[i] * correctX * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
+    // float angleDistance = Quaternion.Angle(wrongX, correctX);
+    //
+    // // if(angleDistance > 100){
+    // //   sideOrientation[i].x *= -1;
+    // // }
+    // if(angleDistance > 80){
+    //   float temp = sideOrientation[i].y;
+    //   sideOrientation[i].y = sideOrientation[i].z;
+    //   sideOrientation[i].z = temp;
+    //   //sideOrientation[i].x *= -1;
+    //   //sideOrientation[i].w *= -1;
+    // }
+
+    //sideOrientation[i] =  Quaternion.Inverse(wrongX * Quaternion.Inverse(sideOrientation[i]) * correctX * sideOrientation[i]);
+
+
+
+
+  }
+
+  void updaterelativeZ(int i){
+    rotationText.text = "Z";
+    Quaternion wrongZ = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
+    Quaternion correctZ =   Quaternion.LookRotation(Vector3.forward, Vector3.right);
+
+    startRotation[i] = sideOrientation[i] * correctZ * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
+
+    // float angleDistance = Quaternion.Angle(wrongZ, correctZ);
+    //
+    // // if(angleDistance > 100){
+    // //   sideOrientation[i].z *= -1;
+    // // }
+    // if(angleDistance > 80){
+    //   float temp = sideOrientation[i].y;
+    //   sideOrientation[i].y = sideOrientation[i].x;
+    //   sideOrientation[i].x = temp;
+    //   //sideOrientation[i].z *= -1;
+    //   //sideOrientation[i].w *= -1;
+    // }
+
+    //sideOrientation[i] =  Quaternion.Inverse(wrongZ * Quaternion.Inverse(sideOrientation[i]) * correctZ * sideOrientation[i]);
+
+
+
+  }
+
+
+
+
   void calculateSideOrientation(int i){
-    stabalizer[i] = gem[i].Rotation;
-    sideOrientation[i] = Quaternion.Inverse(cubeRotationTable[nearestCubeRotationIndex(stabalizer[i])]);
-    stabalizer[i] =  Quaternion.Inverse(stabalizer[i])  ;
+    startRotation[i] = gem[i].Rotation;
+    //sideOrientation[i] = Quaternion.Inverse(cubeRotationTable[nearestCubeRotationIndex(startRotation[i])]);
+    sideOrientation[i] = Quaternion.Inverse(sideOrientationTable[i,nearestSideOrientationIndex(startRotation[i],i)]);
+
+    startRotation[i] =  Quaternion.Inverse(startRotation[i])  ;
 
   }
 
   Quaternion getSideRotation(int i){
-    //return   Quaternion.Inverse(mikeOrientation[i]) * gem[i].Rotation * stabalizer[i]  ;
-    //return     mikeOrientation[i] * ( stabalizer[i] * gem[i].Rotation )  ;
 
-    //return    gem[i].Rotation * sideOrientation[i];
-    return   Quaternion.Inverse(sideOrientation[i]) * stabalizer[i] * gem[i].Rotation * sideOrientation[i];
-    //return  sideOrientation[i] * stabalizer[i] * gem[i].Rotation *  Quaternion.Inverse(sideOrientation[i]);
+    return   Quaternion.Inverse(sideOrientation[i]) * startRotation[i] * gem[i].Rotation * sideOrientation[i];
+    //return   Quaternion.Inverse(sideOrientation[i]) * startRotation[i] * gem[i].Rotation;
 
-    //return gem[i].Rotation *  sideOrientation[i] ;
-
-    //gemRotation.y *= -1;
-
-    //return  stabalizer[i] * gem[i].Rotation * sideOrientation[i];
-    //return  gem[i].Rotation * stabalizer[i] * sideOrientation[i];
 
   }
 
-  void calculateStabalizer(int i){
-      stabalizer[i] = Quaternion.Inverse(Quaternion.LookRotation(
+  void calculateStartRotation(int i){
+      startRotation[i] = Quaternion.Inverse(Quaternion.LookRotation(
       gem[i].Rotation * sideOrientation[i] * Vector3.forward,
       gem[i].Rotation * sideOrientation[i] * Vector3.up));
 
-      stabalizer[i] = Quaternion.Inverse(gem[i].Rotation);
+      startRotation[i] = Quaternion.Inverse(gem[i].Rotation);
 
-      stabalizer[i] = Quaternion.Inverse(sideOrientation[i]) * Quaternion.Inverse(gem[i].Rotation) ;
+      startRotation[i] = Quaternion.Inverse(sideOrientation[i]) * Quaternion.Inverse(gem[i].Rotation) ;
 
 
-        //stabalizer[i] = Quaternion.identity;
+        //startRotation[i] = Quaternion.identity;
   }
 
   void calculateAzimuth(int i){
@@ -588,8 +759,8 @@ public class CalibrateController : MonoBehaviour{
 
 
   void stabalizeGem(int i){
-        //currentState[i] =  stabalizer[i] * currentState[i];//Tomer's Calibrate
-      currentState[i] =  currentState[i] * stabalizer[i];//My Calibrate
+        //currentState[i] =  startRotation[i] * currentState[i];//Tomer's Calibrate
+      currentState[i] =  currentState[i] * startRotation[i];//My Calibrate
 
       //calculateAzimuth(i);
   }

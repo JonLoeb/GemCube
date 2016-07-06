@@ -47,13 +47,13 @@ public class CubeLogic : MonoBehaviour {
 		Quaternion.LookRotation(Vector3.forward, Vector3.up),//This is equal to Quaternion.identity
 		Quaternion.LookRotation(Vector3.left, Vector3.up), //y'
 		Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
-		Quaternion.LookRotation(Vector3.right, Vector3.up),//y
+			Quaternion.LookRotation(Vector3.right, Vector3.up),//y
 		Quaternion.LookRotation(Vector3.forward, Vector3.left),//z'
 		Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
-		Quaternion.LookRotation(Vector3.forward, Vector3.right),//z
+			Quaternion.LookRotation(Vector3.forward, Vector3.right),//z
 		Quaternion.LookRotation(Vector3.up, Vector3.back),//x'
 		Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
-		Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
+			Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
 		Quaternion.LookRotation(Vector3.up, Vector3.left),//z' x'
 		Quaternion.LookRotation(Vector3.back, Vector3.left),//z y2
 		Quaternion.LookRotation(Vector3.down, Vector3.left),//z' x'
@@ -225,13 +225,13 @@ public class CubeLogic : MonoBehaviour {
 
 		for (int i = 0; i < gemCount; i++){
 
-			//gem[i].CalibrateAzimuth();
-			//calculateStabalizer(i);
-			//faceRotation[i] = gem[i].Rotation * sideOrientation[i];
-			//stabalizeGem(i);
+			gem[i].CalibrateAzimuth();
+			calculateStabalizer(i);
+			faceRotation[i] = gem[i].Rotation * sideOrientation[i];
+			stabalizeGem(i);
 
-			calculateSideOrientation(i);
-			faceRotation[i] = getSideRotation(i);
+			//calculateSideOrientation(i);
+			//faceRotation[i] = getSideRotation(i);
 
 			prevAngleCounter[i] = 0;
 			angleCounter[i] = 0;
@@ -252,10 +252,10 @@ public class CubeLogic : MonoBehaviour {
 
 		if(!reset){
 			for (int i = 0; i < gemCount; i++){
-				//faceRotation[i] = gem[i].Rotation * sideOrientation[i];
-				//stabalizeGem(i);
+				faceRotation[i] = gem[i].Rotation * sideOrientation[i];
+				stabalizeGem(i);
 
-				faceRotation[i] = getSideRotation(i);
+				//faceRotation[i] = getSideRotation(i);
 			}
 
 		}
