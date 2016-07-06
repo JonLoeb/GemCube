@@ -440,23 +440,23 @@ public class CalibrateController : MonoBehaviour{
         firstAngleMethod = !firstAngleMethod;
 
       }
-      if (Input.GetKeyDown(KeyCode.Space)){
-        rotationText.text = "poop";
-      }
 
       if (Input.GetKeyDown(KeyCode.X)){
         for (int i = 0; i < gemCount; i++){
-          updaterelativeX(i);
+          rotationText.text = "X";
+          updateCalibration(i, Quaternion.LookRotation(Vector3.down, Vector3.forward), Vector3.right, Vector3.up);
         }
       }
       if (Input.GetKeyDown(KeyCode.Y)){
         for (int i = 0; i < gemCount; i++){
-          updaterelativeY(i);
+          rotationText.text = "Y";
+          updateCalibration(i, Quaternion.LookRotation(Vector3.right, Vector3.up), Vector3.up, Vector3.left);
         }
       }
       if (Input.GetKeyDown(KeyCode.Z)){
         for (int i = 0; i < gemCount; i++){
-          updaterelativeZ(i);
+          rotationText.text = "Z";
+          updateCalibration(i, Quaternion.LookRotation(Vector3.forward, Vector3.right), Vector3.back, Vector3.left);
         }
       }
 
@@ -547,21 +547,6 @@ public class CalibrateController : MonoBehaviour{
     return index;
   }
 
-  int nearestSideOrientationIndex(Quaternion rotation, int gemNumber){
-    int index = 0;
-    float closestDistance = Quaternion.Angle(rotation, sideOrientationTable[gemNumber,0]);
-
-    for (int i = 1; i < 4; i++){
-      float distance = Quaternion.Angle(rotation, sideOrientationTable[gemNumber,i]);
-      if (distance < closestDistance){
-        closestDistance = distance;
-        index = i;
-      }
-    }
-    return index;
-  }
-
-
   float AngleSigned(Vector3 v1, Vector3 v2, Vector3 n){
     return Mathf.Atan2(
         Vector3.Dot(n, Vector3.Cross(v1, v2)),
@@ -595,124 +580,46 @@ public class CalibrateController : MonoBehaviour{
     return true;
   }
 
-  // Quaternion.LookRotation(Vector3.left, Vector3.up), //y'
-  // Quaternion.LookRotation(Vector3.back, Vector3.up),//y2
-  //   Quaternion.LookRotation(Vector3.right, Vector3.up),//y
-  // Quaternion.LookRotation(Vector3.forward, Vector3.left),//z'
-  // Quaternion.LookRotation(Vector3.forward, Vector3.down),//z2
-  //   Quaternion.LookRotation(Vector3.forward, Vector3.right),//z
-  // Quaternion.LookRotation(Vector3.up, Vector3.back),//x'
-  // Quaternion.LookRotation(Vector3.back, Vector3.down),//x2
-  //   Quaternion.LookRotation(Vector3.down, Vector3.forward),//x
 
+  void updateCalibration(int i, Quaternion expectedRotation, Vector3 rotationAxis, Vector3 normalAxis){
+    Quaternion currentRotation = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
 
-  void updaterelativeI(int i){
-    rotationText.text = "I";
-    Quaternion wrongI = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
+    float angleDistance = AngleSigned(currentRotation * normalAxis, expectedRotation * normalAxis, rotationAxis);
+    angleDistance = (angleDistance + 360f) % 360f;
 
-    sideOrientation[i] = wrongI;
-    //sideOrientation[i] = relativeI * sideOrientation[i];
-
-
-
-  }
-  void updaterelativeY(int i){
-    rotationText.text = "Y";
-    Quaternion wrongY = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
-    Quaternion correctY =   Quaternion.LookRotation(Vector3.right, Vector3.up);
-
-    float angleDistance = Quaternion.Angle(wrongY, correctY);
     if(angleDistance > 10){
       if(angleDistance < 100){
+        sideOrientation[i] = Quaternion.LookRotation(Vector3.left, Vector3.up) * sideOrientation[i];
+      }
+      else if(angleDistance > 260){
         sideOrientation[i] = Quaternion.LookRotation(Vector3.right, Vector3.up) * sideOrientation[i];
       }
-      else {
-        sideOrientation[i] = Quaternion.LookRotation(Vector3.back, Vector3.up) * sideOrientation[i];
-      }
-    }
-
-    //startRotation[i] = sideOrientation[i] * correctY * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
-
-    // float angleDistance = Quaternion.Angle(wrongY, correctY);
-    //
-    // // if(angleDistance > 100){
-    // //   sideOrientation[i].y *= -1;
-    // // }
-    // if(angleDistance > 80){
-    //   float temp = sideOrientation[i].x;
-    //   sideOrientation[i].x = sideOrientation[i].z;
-    //   sideOrientation[i].z = temp;
-    //   //sideOrientation[i].y *= -1;
-    //   //sideOrientation[i].w *= -1;
-    // }
-
-    //sideOrientation[i] =  Quaternion.Inverse(wrongY * Quaternion.Inverse(sideOrientation[i]) * correctY * sideOrientation[i]);
-
-
-  }
-  void updaterelativeX(int i){
-    rotationText.text = "X";
-    Quaternion wrongX = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
-    Quaternion correctX =   Quaternion.LookRotation(Vector3.down, Vector3.forward);
-
-    float angleDistance = Quaternion.Angle(wrongX, correctX);
-    if(angleDistance > 10){
-      if(angleDistance < 100){
-        sideOrientation[i] = Quaternion.LookRotation(Vector3.right, Vector3.up) * sideOrientation[i];
-      }
-      else {
-        sideOrientation[i] = Quaternion.LookRotation(Vector3.back, Vector3.up) * sideOrientation[i];
-      }
-    }
-
-    //startRotation[i] = sideOrientation[i] * correctX * Quaternion.Inverse(startRotation[i]) * Quaternion.Inverse(gem[i].Rotation) * startRotation[i];
-    // float angleDistance = Quaternion.Angle(wrongX, correctX);
-    //
-    // // if(angleDistance > 100){
-    // //   sideOrientation[i].x *= -1;
-    // // }
-    // if(angleDistance > 80){
-    //   float temp = sideOrientation[i].y;
-    //   sideOrientation[i].y = sideOrientation[i].z;
-    //   sideOrientation[i].z = temp;
-    //   //sideOrientation[i].x *= -1;
-    //   //sideOrientation[i].w *= -1;
-    // }
-
-    //sideOrientation[i] =  Quaternion.Inverse(wrongX * Quaternion.Inverse(sideOrientation[i]) * correctX * sideOrientation[i]);
-
-
-
-
-  }
-
-  void updaterelativeZ(int i){
-    rotationText.text = "Z";
-    Quaternion wrongZ = cubeRotationTable[ nearestCubeRotationIndex(currentState[i]) ];
-    Quaternion correctZ =   Quaternion.LookRotation(Vector3.forward, Vector3.right);
-    float angleDistance = Quaternion.Angle(wrongZ, correctZ);
-    if(angleDistance > 10){
-      if(angleDistance < 100){
-        sideOrientation[i] = Quaternion.LookRotation(Vector3.right, Vector3.up) * sideOrientation[i];
-      }
-      else {
+      else{
         sideOrientation[i] = Quaternion.LookRotation(Vector3.back, Vector3.up) * sideOrientation[i];
       }
     }
 
 
 
-
-
   }
-
-
-
 
   void calculateSideOrientation(int i){
     startRotation[i] = gem[i].Rotation;
     //sideOrientation[i] = Quaternion.Inverse(cubeRotationTable[nearestCubeRotationIndex(startRotation[i])]);
-    sideOrientation[i] = Quaternion.Inverse(sideOrientationTable[i,nearestSideOrientationIndex(startRotation[i],i)]);
+
+
+    Quaternion q = sideOrientationTable[i,0];
+    float closestDistance = Quaternion.Angle(startRotation[i], sideOrientationTable[i,0]);
+
+    for (int j = 1; j < 4; j++){
+      float distance = Quaternion.Angle(startRotation[i], sideOrientationTable[i,j]);
+      if (distance < closestDistance){
+        closestDistance = distance;
+        q = sideOrientationTable[i,j];
+      }
+    }
+
+    sideOrientation[i] = Quaternion.Inverse(q);
 
     startRotation[i] =  Quaternion.Inverse(startRotation[i])  ;
 
