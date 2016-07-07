@@ -633,7 +633,7 @@ public class CalibrateController : MonoBehaviour{
   Quaternion getSideRotation(int i){
 
     return   Quaternion.Inverse(sideOrientation[i]) * startRotation[i] * gem[i].Rotation * sideOrientation[i];
-    //return   Quaternion.Inverse(sideOrientation[i]) * startRotation[i] * gem[i].Rotation;
+  //  return   Quaternion.Inverse(sideOrientation[i]) * startRotation[i] * gem[i].Rotation;
 
 
   }
