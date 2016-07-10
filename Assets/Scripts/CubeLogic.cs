@@ -350,14 +350,14 @@ public class CubeLogic : MonoBehaviour {
 						void rotateCube (bool reset){
 							//cubeRotation = Quaternion.identity;
 
-							if(!((calibrateX && calibrateY) || (calibrateX && calibrateZ) || (calibrateY && calibrateZ))){
+							if(!((calibrateX && calibrateY) || (calibrateX && calibrateZ) || (calibrateY && calibrateZ) || masterAllower)){
 								//	if(!(calibrateX && calibrateY && calibrateZ && masterAllower)){
 								if(allGemsConnected()){
 									cubeRotation = getCubeRotation();
 									transform.rotation = cubeRotation;
 								}
 								else if (gem[0].State == GemState.Connected){
-									transform.rotation = gem[0].Rotation;
+									transform.rotation = faceRotation[0];
 								}
 								for(int i = 0; i < gemCount; i++){
 									faceRotation[i] = getSideRotation(i);
@@ -378,18 +378,18 @@ public class CubeLogic : MonoBehaviour {
 								cubeRotation = getCubeRotation();
 							}
 							Quaternion prevCubeRotation;
-							if(cubeStateMatched){
+							//if(cubeStateMatched){
 								prevCubeRotation = cubeRotation;
-							}
-							else{
-								cubeRotation = getCubeRotation();
-								prevCubeRotation = cubeRotation;
-								cubeStateMatched = true;
-							}
+							// }
+							// else{
+							// 	cubeRotation = getCubeRotation();
+							// 	prevCubeRotation = cubeRotation;
+							// 	cubeStateMatched = true;
+							// }
 
 							//checkConnections();
 							cubeRotation = getCubeRotation();
-							if(Quaternion.Angle(prevCubeRotation, cubeRotation) > 50){
+							if(Quaternion.Angle(prevCubeRotation, cubeRotation) > 50 && Quaternion.Angle(prevCubeRotation, Quaternion.identity) < 1){
 								cubeRotation = prevCubeRotation;
 							}
 							else{
@@ -402,7 +402,7 @@ public class CubeLogic : MonoBehaviour {
 							}
 
 							if ((allGemsConnected() || true) && !reset){
-							//if (allGemsConnected() && !reset){
+								//if (allGemsConnected() && !reset){
 
 
 								//calibrates the gems after they are all connected
