@@ -214,6 +214,7 @@ public class CubeLogic : MonoBehaviour {
 		}
 	}
 
+	//prints the connection state and the angles of each gem
 	void printAngles(){
 		string[] sideColor = new string[] {"White", "Orange", "Green", "Red", "Blue", "Yellow"};
 		for (int i = 0; i < gemCount; i++){
@@ -335,7 +336,7 @@ public class CubeLogic : MonoBehaviour {
 		}
 	}
 
-
+	//returns the manipulated gem data to be used for side rotations
 	Quaternion getSideRotation(int i){
 		return   Quaternion.Inverse(sideOrientation[i]) * startRotation[i] * gem[i].Rotation * sideOrientation[i];
 		//return   Quaternion.Inverse(sideOrientation[i]) * startRotation[i] * gem[i].Rotation;
@@ -386,12 +387,14 @@ public class CubeLogic : MonoBehaviour {
 		}
 	}
 
+//Gives each face a new letter after rotation (U becomes L after a z' rotation)
 	void reassignFaceLetters(int currentRotationIndex){
 		for (int i = 0; i < sideOrder.Length; i++){
 			sideOrder[i] = sideOrderTable[currentRotationIndex, i];
 		}
 	}
 
+	//calculates cube rotations and prints result to "moves" string
 	string printCubeRotations(Quaternion prevCubeRotation){
 		Quaternion closestRotationToCubeRotation =  cubeRotationTable[nearestCubeRotationIndex(cubeRotation)];
 		Quaternion relativeRotation =	closestRotationToCubeRotation * Quaternion.Inverse(prevCubeRotation);
@@ -401,6 +404,7 @@ public class CubeLogic : MonoBehaviour {
 		return rotationText;
 	}
 
+	//combines moves in "moves" string for slice turns
 	string useSlices(string s){
 		//M Moves
 		s = s.Replace("x R' L", "M'");
@@ -450,6 +454,7 @@ public class CubeLogic : MonoBehaviour {
 		return s;
 	}
 
+	//combines moves in "moves" string for wide turns
 	string useWideTurns(string s){
 		//u Moves
 		s = s.Replace("y D", "u");
@@ -478,6 +483,7 @@ public class CubeLogic : MonoBehaviour {
 		return s;
 	}
 
+	//returns index of array (to aproximate the rotation) that is assosiated with a given rotation
 	int nearestCubeRotationIndex(Quaternion rotation){
 		int index = 0;
 		float closestDistance = Quaternion.Angle(rotation, cubeRotationTable[0]);
@@ -492,7 +498,7 @@ public class CubeLogic : MonoBehaviour {
 		return index;
 	}
 
-
+	//checks to see if corner is on layer
 	bool cornerIsOnLayer(int cornerIndex, int layerIndex){
 		if(layerIndex == 0){
 			if (cornerOrder[0] == cornerIndex || cornerOrder[1] == cornerIndex || cornerOrder[2] == cornerIndex || cornerOrder[3] == cornerIndex){
@@ -527,6 +533,7 @@ public class CubeLogic : MonoBehaviour {
 
 		return false;
 	}
+	//checks to see if edge is on layer
 	bool edgeIsOnLayer(int edgeIndex, int layerIndex){
 		if(layerIndex == 0){
 			if (edgeOrder[0] == edgeIndex || edgeOrder[1] == edgeIndex || edgeOrder[2] == edgeIndex || edgeOrder[3] == edgeIndex){
@@ -827,6 +834,7 @@ public class CubeLogic : MonoBehaviour {
 		}
 	}
 
+	//fixes problems caused by rounding errors in floats
 	Quaternion fixRounding (Quaternion a){
 		float aL = Mathf.Sqrt(a.x*a.x + a.y*a.y + a.z*a.z + a.w*a.w);
 
@@ -838,6 +846,7 @@ public class CubeLogic : MonoBehaviour {
 		return a;
 	}
 
+	//rotates a side's quaternion (faceRotation[i]) to match the angle of cubeRotation
 	void matchRotationToCube(int i){
 		//match state to cube
 		Quaternion q = faceRotation[i] * Quaternion.FromToRotation(faceRotation[i] * axis[i], cubeRotation * axis[i]);
@@ -847,6 +856,7 @@ public class CubeLogic : MonoBehaviour {
 		//faceRotation[i] = Quaternion.Slerp(faceRotation[i], q, 0.5f);
 	}
 
+	//given an axis this will calibrate the gems to follow that axis after a rotation in the current direction
 	void updateCalibration(int i, Quaternion expectedRotation, Vector3 rotationAxis, Vector3 normalAxis){
 		Quaternion currentRotation = cubeRotationTable[ nearestCubeRotationIndex(faceRotation[i]) ];
 
@@ -893,6 +903,7 @@ public class CubeLogic : MonoBehaviour {
 		}
 	}
 
+	//makes angles gradually (faster and faster) go to 90 degree turns (strongest when close to 90 degree turns)
 	float getDampedAngle(float angle, float minPower, float maxPower){
 		float roundedAngle = Mathf.Round( angle/90f  )*90f;
 		roundedAngle = (roundedAngle + 360f) % 360f;
@@ -1126,6 +1137,7 @@ public class CubeLogic : MonoBehaviour {
 		return newQ;
 	}
 
+	//returns an angle with proper sign given two vectors and a vector normal to them
 	float AngleSigned(Vector3 v1, Vector3 v2, Vector3 n){
 		return Mathf.Atan2(
 		Vector3.Dot(n, Vector3.Cross(v1, v2)),
@@ -1142,6 +1154,7 @@ public class CubeLogic : MonoBehaviour {
 		return -1;
 	}
 
+	//rotates all the 3d gem GameObjects
 	void transformGems(){
 		for (int i = 0; i < gemCount; i++){
 			gems[i].transform.rotation = faceRotation[i];
