@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/GemSDK/Scenes/CalibrateDemo.unity
+- path: Assets/JonWorld.unity
   isLoaded: 1
   isActive: 1

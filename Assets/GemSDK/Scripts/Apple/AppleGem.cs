@@ -86,8 +86,6 @@ namespace GemSDK.Unity.Apple
 			}
 		}
 
-		//private NativeWrapper.OnCombinedDataCallback onCombinedData = new NativeWrapper.OnCombinedDataCallback(OnCombinedData);
-
 		internal void Connect()
 		{
 			NativeWrapper.connectGem(GemPointer, OnErrorOccured, OnStateChanged, OnCombinedData, OnTapData);
@@ -180,9 +178,9 @@ namespace GemSDK.Unity.Apple
 			if (_gem == null)
 				throw new Exception("OnErrorOccured called on non-existing/disconnected gem");
 
-			if (error == 6 || error == 10)
+			if (error == 6)
 			{
-				Debug.LogErrorFormat("{0}: timed out, trying to reconnect..."  + error, _gem.Address);
+				Debug.LogErrorFormat("{0}: timed out, trying to reconnect...", _gem.Address);
 				_gem.Connect();
 			}
 			else
@@ -200,7 +198,7 @@ namespace GemSDK.Unity.Apple
 
 			if (_gem == null)
 				throw new Exception("OnStateChanged called on non-existing/disconnected gem");
-
+			
 			switch (state)
 			{
 			case NativeWrapper.GemState.Connected:
@@ -221,16 +219,16 @@ namespace GemSDK.Unity.Apple
 		[MonoPInvokeCallback(typeof(NativeWrapper.OnCombinedDataCallback))]
 		private static void OnCombinedData(IntPtr gem, IntPtr quaternion, IntPtr acceleration)
 		{
-			AppleGem _gem = FindGemByPointer(gem);
-
-			if (_gem == null)
-				throw new Exception("OnCombinedData called on non-existing/disconnected gem");
-
 			float[] q = new float[4];
 			Marshal.Copy(quaternion, q, 0, 4);
 
 			float[] acc = new float[3];
 			Marshal.Copy(acceleration, acc, 0, 3);
+
+			AppleGem _gem = FindGemByPointer(gem);
+
+			if (_gem == null)
+				throw new Exception("OnCombinedData called on non-existing/disconnected gem");
 
 			_gem.LastQuaternion = new Quaternion(q[1], q[2], q[3], q[0]);
 			_gem.LastAcceleration = new Vector3(acc[0], acc[1], acc[2]);
@@ -282,3 +280,4 @@ namespace GemSDK.Unity.Apple
 		}
 	}
 }
+

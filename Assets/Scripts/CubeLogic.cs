@@ -33,6 +33,9 @@ public class CubeLogic : MonoBehaviour {
 	public bool calibrateZ = false;
 	public bool masterAllower = false;
 
+	bool keyIsDown = false;
+
+	public bool first = true;
 
 
 	public Transform[] corner = new Transform[8];
@@ -131,6 +134,7 @@ public class CubeLogic : MonoBehaviour {
 	float[] prevAngleCounter = new float[gemCount];
 	float[] spinFixer = new float[gemCount];
 
+
 	string moves = "";
 	char[] sideOrder = new char[] {'U', 'L', 'F', 'R', 'B', 'D'};
 
@@ -160,7 +164,7 @@ public class CubeLogic : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 		if(gemsAreNotNull()){
-			if (Input.GetKeyDown(KeyCode.Space)){
+			if (Input.GetKeyDown(KeyCode.Space) && !keyIsDown){
 				moves = "";
 				masterAllower = true;
 			}
@@ -174,32 +178,39 @@ public class CubeLogic : MonoBehaviour {
 
 			}
 
-			if (Input.GetKeyDown(KeyCode.I)){
+			if (Input.GetKeyDown(KeyCode.I)  && !keyIsDown){
 				for (int i = 0; i < gemCount; i++){
 					rotationText.text = "";
 					updateCalibration(i, Quaternion.identity, Vector3.up, Vector3.forward);
+					keyIsDown = true;
 				}
 			}
-			if (Input.GetKeyDown(KeyCode.X)){
+			if (Input.GetKeyDown(KeyCode.X)  && !keyIsDown){
 				for (int i = 0; i < gemCount; i++){
 					rotationText.text = "X";
 					updateCalibration(i, Quaternion.LookRotation(Vector3.down, Vector3.forward), Vector3.right, Vector3.up);
+					keyIsDown = true;
 				}
 				calibrateX = true;
 			}
-			if (Input.GetKeyDown(KeyCode.Y)){
+			if (Input.GetKeyDown(KeyCode.Y)  && !keyIsDown){
 				for (int i = 0; i < gemCount; i++){
 					rotationText.text = "Y";
 					updateCalibration(i, Quaternion.LookRotation(Vector3.right, Vector3.up), Vector3.up, Vector3.left);
+					keyIsDown = true;
 				}
 				calibrateY = true;
 			}
-			if (Input.GetKeyDown(KeyCode.Z)){
+			if (Input.GetKeyDown(KeyCode.Z) && !keyIsDown){
 				for (int i = 0; i < gemCount; i++){
 					rotationText.text = "Z";
 					updateCalibration(i, Quaternion.LookRotation(Vector3.forward, Vector3.right), Vector3.forward, Vector3.left);
+					keyIsDown = true;
 				}
 				calibrateZ = true;
+			}
+			if(Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.I) || Input.GetKeyUp(KeyCode.X) || Input.GetKeyUp(KeyCode.Y) || Input.GetKeyUp(KeyCode.Z)){
+				keyIsDown = false;
 			}
 			else {
 
@@ -231,6 +242,7 @@ public class CubeLogic : MonoBehaviour {
 		cornerOrder = new int[] {0,1,2,3,4,5,6,7};
 		edgeOrder = new int[] {0,1,2,3,4,5,6,7,8,9,10,11};
 		sideOrder = new char[] {'U', 'L', 'F', 'R', 'B', 'D'};
+		first = true;
 		for (int i = 0; i < 6; i++){
 			centerPermutation[i] = Quaternion.identity;
 		}
@@ -257,12 +269,6 @@ public class CubeLogic : MonoBehaviour {
 
 		resticker();
 		transform.rotation = cubeRotation;
-		for(int i = 0; i < gemCount; i++){
-			rotateSide(i);
-		}
-		for(int i = 0; i < gemCount; i++){
-			doSpin(i);
-		}
 	}
 
 
@@ -277,15 +283,22 @@ public class CubeLogic : MonoBehaviour {
 		transformGems();
 
 		if(!((calibrateX && calibrateY) || (calibrateX && calibrateZ) || (calibrateY && calibrateZ) || masterAllower)){
-			if(allGemsConnected()){
+			if(allGemsConnected() || true){
 				cubeRotation = getCubeRotation();
 				transform.rotation = cubeRotation;
 			}
+			first = true;
 			return;
 		}
 
 		Quaternion prevCubeRotation = cubeRotation;
 		cubeRotation = getCubeRotation();
+
+		if(first){
+			//moves += "foo  ";
+			moves += printCubeRotations(Quaternion.identity);
+			first = false;
+		}
 
 		if(Quaternion.Angle(prevCubeRotation, cubeRotation) > 50 && Quaternion.Angle(prevCubeRotation, Quaternion.identity) > 1){
 			cubeRotation = prevCubeRotation;
@@ -299,7 +312,7 @@ public class CubeLogic : MonoBehaviour {
 			}
 		}
 
-		if (allGemsConnected()){
+		if (allGemsConnected() || true){
 			resticker();
 			transform.rotation = cubeRotation;
 			moves += printCubeRotations(prevCubeRotation);

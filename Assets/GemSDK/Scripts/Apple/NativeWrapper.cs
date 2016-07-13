@@ -8,7 +8,7 @@ namespace GemSDK.Unity.Apple
 		#if UNITY_IOS
 		private const string DLLName = "__Internal";
 		#else
-		private const string DLLName = "OSXPlugin";
+		private const string DLLName = "GemSDK";
 		#endif
 		// GemScanDelegate protocol
 
