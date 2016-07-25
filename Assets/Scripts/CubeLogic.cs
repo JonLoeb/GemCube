@@ -181,14 +181,17 @@ public class CubeLogic : MonoBehaviour {
 			if (Input.GetKeyDown(KeyCode.I)  && !keyIsDown){
 				for (int i = 0; i < gemCount; i++){
 					rotationText.text = "";
-					updateCalibration(i, Quaternion.identity, Vector3.up, Vector3.forward);
+					updateCalibration(i, Quaternion.identity, Vector3.up, Vector3.forward, true);
 					keyIsDown = true;
 				}
 			}
 			if (Input.GetKeyDown(KeyCode.X)  && !keyIsDown){
 				for (int i = 0; i < gemCount; i++){
 					rotationText.text = "X";
-					updateCalibration(i, Quaternion.LookRotation(Vector3.down, Vector3.forward), Vector3.right, Vector3.up);
+					//TOFIX
+					//change last parameter to down? Rotation corrections seem to be going the wrong way at first
+					updateCalibration(i, Quaternion.LookRotation(Vector3.down, Vector3.forward), Vector3.right, Vector3.up, true);
+						//x'
 					keyIsDown = true;
 				}
 				calibrateX = true;
@@ -196,7 +199,8 @@ public class CubeLogic : MonoBehaviour {
 			if (Input.GetKeyDown(KeyCode.Y)  && !keyIsDown){
 				for (int i = 0; i < gemCount; i++){
 					rotationText.text = "Y";
-					updateCalibration(i, Quaternion.LookRotation(Vector3.right, Vector3.up), Vector3.up, Vector3.left);
+					updateCalibration(i, Quaternion.LookRotation(Vector3.right, Vector3.up), Vector3.up, Vector3.left, true);
+						//y'
 					keyIsDown = true;
 				}
 				calibrateY = true;
@@ -204,7 +208,8 @@ public class CubeLogic : MonoBehaviour {
 			if (Input.GetKeyDown(KeyCode.Z) && !keyIsDown){
 				for (int i = 0; i < gemCount; i++){
 					rotationText.text = "Z";
-					updateCalibration(i, Quaternion.LookRotation(Vector3.forward, Vector3.right), Vector3.forward, Vector3.left);
+					updateCalibration(i, Quaternion.LookRotation(Vector3.forward, Vector3.right), Vector3.forward, Vector3.left, true);
+						//z'
 					keyIsDown = true;
 				}
 				calibrateZ = true;
@@ -870,13 +875,27 @@ public class CubeLogic : MonoBehaviour {
 	}
 
 	//given an axis this will calibrate the gems to follow that axis after a rotation in the current direction
-	void updateCalibration(int i, Quaternion expectedRotation, Vector3 rotationAxis, Vector3 normalAxis){
+	void updateCalibration(int i, Quaternion expectedRotation, Vector3 rotationAxis, Vector3 normalAxis, bool callAgain){
 		Quaternion currentRotation = cubeRotationTable[ nearestCubeRotationIndex(faceRotation[i]) ];
 
 		float angleDistance = AngleSigned(currentRotation * normalAxis, expectedRotation * normalAxis, rotationAxis);
 		angleDistance = (angleDistance + 360f) % 360f;
 
-		if(angleDistance > 10){//check for update
+		sideOrientation[i] = Quaternion.AngleAxis(angleDistance, Vector3.up) * sideOrientation[i];
+
+		//currentRotation = cubeRotationTable[ nearestCubeRotationIndex(getSideRotation(i)) ];
+		// if (AngleSigned(currentRotation * normalAxis, expectedRotation * normalAxis, rotationAxis) > 10f){
+		// 	sideOrientation[i] = Quaternion.AngleAxis(-2 * angleDistance, Vector3.up) * sideOrientation[i];
+		// }
+			//call method again to fix edge cases not caught first time (rotated wrong way)
+
+		if(callAgain){
+			faceRotation[i] = getSideRotation(i);
+			updateCalibration(i, expectedRotation, rotationAxis, normalAxis, false);
+		}
+
+
+		if(angleDistance > 10 && false){//check for update
 			if(angleDistance < 100){//90 degrees
 				sideOrientation[i] = Quaternion.LookRotation(Vector3.left, Vector3.up) * sideOrientation[i];
 			}
@@ -887,6 +906,7 @@ public class CubeLogic : MonoBehaviour {
 				sideOrientation[i] = Quaternion.LookRotation(Vector3.back, Vector3.up) * sideOrientation[i];
 			}
 		}
+
 	}
 
 	//sets angleCounter[i] = to the angle that the side is rotated with respect to the core of the cube
